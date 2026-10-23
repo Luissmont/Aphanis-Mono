@@ -1,6 +1,8 @@
 import React from "react";
 import { ContentCard } from "@/components/transfer/ContentCard";
 import { LimitsCard } from "@/components/transfer/LimitsCard";
+import { PinCard } from "@/components/transfer/PinCard";
+import { RecipientsCard } from "@/components/transfer/RecipientsCard";
 
 export default function Home() {
   return (
@@ -26,21 +28,17 @@ export default function Home() {
 
       {/* Grid de Tarjetas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-        {/* Tarjeta 1: Contenido (Modularizada) */}
+        {/* Tarjeta 1: Contenido (Fila 1, 2 columnas) */}
         <ContentCard />
 
-        {/* Tarjeta 2: Límites (Modularizada) */}
+        {/* Tarjeta 2: Límites (Fila 1, 1 columna) */}
         <LimitsCard />
 
-        {/* Tarjeta 4: PIN de cifrado (Placeholder temporal) */}
-        <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-2 h-64 flex flex-col justify-between">
-          <h2 className="text-lg font-bold text-white">03 PIN de cifrado</h2>
-        </div>
+        {/* Tarjeta 4: PIN de cifrado (Fila 2, 2 columnas) */}
+        <PinCard />
 
-        {/* Tarjeta 3: Destinatarios (Placeholder temporal) */}
-        <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-1 h-64 flex flex-col justify-between">
-          <h2 className="text-lg font-bold text-white">03 Destinatarios</h2>
-        </div>
+        {/* Tarjeta 3: Destinatarios (Fila 2, 1 columna) */}
+        <RecipientsCard />
       </div>
     </div>
   );
