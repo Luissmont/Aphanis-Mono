@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Passion_One } from "next/font/google";
 import "./globals.css";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 const passionOne = Passion_One({
   weight: ["400", "700", "900"],
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${passionOne.variable} h-full antialiased`}>
       <body className="flex h-screen w-full overflow-hidden bg-[#000000] text-[#FFFFFF]">
-        {/* Espacio preparado para la integración de <Sidebar /> en el Paso 2 */}
+        <Sidebar />
         <main className="flex-1 h-full overflow-y-auto bg-[#000000]">
           {children}
         </main>
