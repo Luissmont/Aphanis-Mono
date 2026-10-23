@@ -5,7 +5,6 @@ import React from "react";
 interface NavItem {
   label: string;
   href?: string;
-  isSpecial?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -18,21 +17,23 @@ const NAV_ITEMS: NavItem[] = [
 export function Sidebar() {
   return (
     <aside className="w-72 sm:w-80 h-full p-4 flex flex-col shrink-0 select-none">
-      {/* Contenedor principal de la Sidebar con esquinas redondeadas y fondo oscuro */}
-      <div className="w-full h-full bg-[#1C1C1E] rounded-[32px] p-6 flex flex-col justify-between border border-white/5 shadow-2xl">
-        {/* Cabecera: Logo APHANIS + Adorno amarillo rotado */}
+      {/* Contenedor principal con fondo #1C1C1E y esquinas redondeadas */}
+      <div className="relative w-full h-full bg-[#1C1C1E] rounded-[32px] p-6 flex flex-col justify-between border border-white/5 shadow-2xl">
+        {/* Cabecera: Logo APHANIS + Adorno amarillo neón en el extremo derecho */}
         <div>
-          <div className="flex items-center gap-3 mb-10 pt-2 px-1">
+          <div className="relative flex items-center justify-between mb-10 pt-2 px-1">
             <h1 className="text-4xl font-black tracking-wider text-white uppercase font-sans">
               APHANIS
             </h1>
-            <div
-              className="w-8 h-8 bg-[#CCFF00] rotate-45 rounded-md shrink-0 shadow-[0_0_16px_rgba(204,255,0,0.35)]"
-              aria-hidden="true"
+            {/* Rombo amarillo neón en el extremo derecho como indicador / botón de colapso */}
+            <button
+              type="button"
+              className="w-8 h-8 bg-[#CCFF00] rotate-45 rounded-md shrink-0 shadow-[0_0_16px_rgba(204,255,0,0.35)] hover:scale-110 active:scale-95 transition-transform cursor-pointer -mr-3"
+              aria-label="Colapsar menú"
             />
           </div>
 
-          {/* Menú de navegación principal con efecto Glassmorphism */}
+          {/* Menú de navegación con efecto Glassmorphism */}
           <nav className="flex flex-col gap-4" aria-label="Menú principal">
             {NAV_ITEMS.map((item) => (
               <button
@@ -46,7 +47,7 @@ export function Sidebar() {
           </nav>
         </div>
 
-        {/* Botón inferior: Iniciar Sesión / Registrarse con acento amarillo neón */}
+        {/* Botón inferior: Iniciar Sesión / Registrarse */}
         <div className="pt-4">
           <button
             type="button"
@@ -59,4 +60,3 @@ export function Sidebar() {
     </aside>
   );
 }
-
