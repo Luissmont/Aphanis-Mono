@@ -4,13 +4,11 @@ export function PinCard() {
   return (
     <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-2 flex flex-col justify-between">
       <div>
-        {/* Cabecera de Destinatarios / PIN */}
         <div className="mb-4">
           <span className="text-xs text-zinc-400 block">03</span>
           <h2 className="text-base sm:text-lg font-bold text-white">Destinatarios</h2>
         </div>
 
-        {/* Sección: PIN de cifrado con input y botón generar */}
         <div>
           <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
             PIN de cifrado
@@ -31,11 +29,9 @@ export function PinCard() {
         </div>
       </div>
 
-      {/* Nota inferior explicativa */}
       <p className="text-xs text-zinc-500 mt-4 select-none">
         Comparte el PIN por un canal distinto al enlace
       </p>
     </div>
   );
 }
-

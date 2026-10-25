@@ -5,13 +5,11 @@ export function RecipientsCard() {
   return (
     <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-1 flex flex-col justify-between">
       <div>
-        {/* Cabecera de Destinatarios */}
         <div className="mb-4">
           <span className="text-xs text-zinc-400 block">03</span>
           <h2 className="text-base sm:text-lg font-bold text-white">Destinatarios</h2>
         </div>
 
-        {/* Sección: Correos electrónicos */}
         <div className="mb-4">
           <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
             Correos electrónicos
@@ -23,7 +21,6 @@ export function RecipientsCard() {
           />
         </div>
 
-        {/* Sección: Mis grupos */}
         <div>
           <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
             Mis grupos
@@ -37,4 +34,3 @@ export function RecipientsCard() {
     </div>
   );
 }
-

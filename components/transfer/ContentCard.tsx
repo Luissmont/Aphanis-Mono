@@ -8,14 +8,12 @@ export function ContentCard() {
 
   return (
     <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-2 flex flex-col justify-between">
-      {/* Cabecera con título y selector de tipo de contenido */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <span className="text-xs text-zinc-400 block">01</span>
           <h2 className="text-base sm:text-lg font-bold text-white">Contenido</h2>
         </div>
 
-        {/* Píldoras de selección Texto plano / Archivo */}
         <div className="bg-black/60 p-1 rounded-full border border-white/5 flex gap-1">
           <button
             type="button"
@@ -42,7 +40,6 @@ export function ContentCard() {
         </div>
       </div>
 
-      {/* Cuerpo del contenido según la pestaña activa */}
       <div className="h-56 sm:h-64 w-full">
         {tab === "text" ? (
           <textarea
@@ -59,4 +56,3 @@ export function ContentCard() {
     </div>
   );
 }
-

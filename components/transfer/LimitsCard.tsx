@@ -5,13 +5,11 @@ export function LimitsCard() {
   return (
     <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-1 flex flex-col justify-between">
       <div>
-        {/* Cabecera de Límites */}
         <div className="mb-4">
           <span className="text-xs text-zinc-400 block">02</span>
           <h2 className="text-base sm:text-lg font-bold text-white">Límites</h2>
         </div>
 
-        {/* Sección: Tiempo límite */}
         <div className="mb-4">
           <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
             Tiempo límite
@@ -22,7 +20,6 @@ export function LimitsCard() {
           </div>
         </div>
 
-        {/* Sección: Número de aperturas */}
         <div>
           <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
             Número de aperturas
@@ -34,7 +31,6 @@ export function LimitsCard() {
         </div>
       </div>
 
-      {/* Recuadro inferior de aviso en amarillo neón */}
       <div className="mt-5 border border-[#CCFF00]/20 bg-[#CCFF00]/5 rounded-xl p-3">
         <p className="text-[#CCFF00] text-[10px] sm:text-xs font-medium leading-relaxed">
           El contenido se elimina automáticamente al alcanzar cualquiera de los límites
@@ -43,4 +39,3 @@ export function LimitsCard() {
     </div>
   );
 }
-
