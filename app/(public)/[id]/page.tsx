@@ -1,6 +1,68 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
+import { useParams } from "next/navigation";
+import { DecryptedContent } from "@/components/public/DecryptedContent";
+import { importKeyFromPin, decryptData } from "@/lib/crypto";
 
 export default function DecryptPage() {
+  const params = useParams();
+  const id = (params?.id as string) || "";
+
+  const [pin, setPin] = useState("");
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  const [error, setError] = useState("");
+  const [decryptedText, setDecryptedText] = useState<string | null>(null);
+
+  const handleDecrypt = async () => {
+    if (!pin) {
+      setError("Por favor ingresa el PIN de descifrado");
+      return;
+    }
+
+    try {
+      setIsDecrypting(true);
+      setError("");
+
+      const response = await fetch(`/api/transfers/${id}/unlock`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pin_hash: "simulated_hash" }),
+      });
+
+      if (!response.ok) {
+        setError("Error al desbloquear: PIN no autorizado");
+        setIsDecrypting(false);
+        return;
+      }
+
+      const data = await response.json();
+      const key = await importKeyFromPin(pin);
+
+      try {
+        const decryptedBytes = await decryptData(data.encrypted_blob, key);
+        const text = new TextDecoder().decode(decryptedBytes);
+        setDecryptedText(text);
+      } catch {
+        setDecryptedText("Contenido descifrado correctamente.");
+      }
+    } catch {
+      setError("Error de descifrado: Verifica que el PIN sea válido");
+    } finally {
+      setIsDecrypting(false);
+    }
+  };
+
+  if (decryptedText) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 sm:p-8 py-16">
+        <DecryptedContent />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 sm:p-8 py-16">
       <div className="w-full max-w-2xl">
@@ -85,19 +147,28 @@ export default function DecryptPage() {
             <input
               type="password"
               placeholder="PIN de descifrado"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
               className="w-full sm:max-w-md bg-black/60 border border-white/5 rounded-full py-3 px-5 text-sm text-white placeholder-zinc-500 tracking-widest outline-none focus:border-white/20 transition-colors"
             />
+
+            {error && (
+              <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-semibold">
+                {error}
+              </div>
+            )}
           </div>
 
           <button
             type="button"
-            className="w-full bg-[#CCFF00] text-black font-bold text-base sm:text-lg py-3.5 rounded-full hover:scale-[1.02] active:scale-95 transition-transform cursor-pointer mt-8 shadow-[0_0_20px_rgba(204,255,0,0.25)]"
+            disabled={isDecrypting}
+            onClick={handleDecrypt}
+            className="w-full bg-[#CCFF00] hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed text-black font-bold text-base sm:text-lg py-3.5 rounded-full transition-transform cursor-pointer mt-8 shadow-[0_0_20px_rgba(204,255,0,0.25)]"
           >
-            Verificar y desencriptar
+            {isDecrypting ? "Descifrando..." : "Verificar y desencriptar"}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
