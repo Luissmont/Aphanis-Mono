@@ -9,6 +9,7 @@ import { generateSecureKey, importKeyFromPin, encryptData } from "@/lib/crypto";
 import { CheckCircle2, Copy } from "lucide-react";
 
 export default function Home() {
+  const [secretText, setSecretText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [createdTransfer, setCreatedTransfer] = useState<{
     accessCode: string;
@@ -16,12 +17,16 @@ export default function Home() {
   } | null>(null);
 
   const handleCreateTransfer = async () => {
+    if (!secretText.trim()) {
+      return;
+    }
+
     try {
       setIsProcessing(true);
 
       const pin = await generateSecureKey();
       const key = await importKeyFromPin(pin);
-      const data = new TextEncoder().encode("Mensaje de prueba");
+      const data = new TextEncoder().encode(secretText);
       const encryptedBlob = await encryptData(data, key);
 
       const response = await fetch("/api/transfers", {
@@ -81,13 +86,13 @@ export default function Home() {
             </span>
             <div className="bg-black/50 border border-white/5 rounded-full py-2.5 px-4 flex items-center justify-between text-sm text-zinc-300">
               <span className="truncate">
-                {origin}/t/{createdTransfer.accessCode}
+                {origin}/{createdTransfer.accessCode}
               </span>
               <button
                 type="button"
                 onClick={() =>
                   navigator.clipboard.writeText(
-                    `${origin}/t/${createdTransfer.accessCode}`
+                    `${origin}/${createdTransfer.accessCode}`
                   )
                 }
                 className="text-zinc-400 hover:text-white transition-colors p-1 cursor-pointer"
@@ -121,7 +126,10 @@ export default function Home() {
 
           <button
             type="button"
-            onClick={() => setCreatedTransfer(null)}
+            onClick={() => {
+              setCreatedTransfer(null);
+              setSecretText("");
+            }}
             className="mt-2 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold py-2.5 px-6 rounded-full self-start transition-colors cursor-pointer"
           >
             Crear otro paquete
@@ -130,7 +138,10 @@ export default function Home() {
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-            <ContentCard />
+            <ContentCard
+              secretText={secretText}
+              setSecretText={setSecretText}
+            />
             <LimitsCard />
             <PinCard />
             <RecipientsCard />
@@ -139,7 +150,7 @@ export default function Home() {
           <div className="mt-8 flex justify-end">
             <button
               type="button"
-              disabled={isProcessing}
+              disabled={isProcessing || !secretText.trim()}
               onClick={handleCreateTransfer}
               className="bg-[#CCFF00] hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed text-black font-bold px-8 py-3.5 rounded-full transition-transform cursor-pointer shadow-[0_0_20px_rgba(204,255,0,0.3)] text-sm uppercase tracking-wide"
             >
