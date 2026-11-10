@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
+import { DashboardService } from "@/lib/services/dashboard.service";
 
 export async function GET() {
-  const mockGroups = [
-    {
-      id: "grp_01",
-      name: "Equipo de Desarrollo",
-      membersCount: 8,
-    },
-    {
-      id: "grp_02",
-      name: "Directivos",
-      membersCount: 4,
-    },
-  ];
-
-  return NextResponse.json(mockGroups);
+  try {
+    const groups = await DashboardService.fetchGroups();
+    return NextResponse.json(groups);
+  } catch (error) {
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -29,4 +22,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json(newGroup, { status: 201 });
 }
-
