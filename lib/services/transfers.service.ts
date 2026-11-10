@@ -7,6 +7,15 @@ interface ProcessNewTransferParams {
   expiresInHours: number;
 }
 
+interface TransferInfoResponse {
+  status: string;
+  expires_at: string;
+  transfer_contents: {
+    content_type: string;
+    metadata: Record<string, unknown> | null;
+  }[];
+}
+
 export const TransfersService = {
   async processNewTransfer(params: ProcessNewTransferParams): Promise<string> {
     const accessCode = Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -23,5 +32,20 @@ export const TransfersService = {
     });
 
     return accessCode;
+  },
+
+  async getTransferInfo(accessCode: string): Promise<TransferInfoResponse> {
+    const transfer = await TransfersRepository.getTransferByCode(accessCode);
+
+    if (new Date(transfer.expires_at) < new Date()) {
+      throw new Error("Transferencia caducada");
+    }
+
+    return transfer;
+  },
+
+  async unlockTransfer(accessCode: string, _pinHash: string): Promise<string> {
+    const encryptedBlob = await TransfersRepository.executeUnlock(accessCode);
+    return encryptedBlob;
   },
 };

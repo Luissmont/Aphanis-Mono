@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
+import { TransfersService } from "@/lib/services/transfers.service";
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-
-  return NextResponse.json({
-    id,
-    status: "active",
-    content_type: "file",
-    metadata: {
-      name: "informe_auditoria_2025.pdf",
-      size: "12.4 MB",
-    },
-  });
+  try {
+    const { id } = await params;
+    const transfer = await TransfersService.getTransferInfo(id);
+    return NextResponse.json(transfer);
+  } catch (error) {
+    const message = (error as Error).message;
+    if (message === "Transferencia caducada") {
+      return NextResponse.json({ error: message }, { status: 410 });
+    }
+    return NextResponse.json({ error: message }, { status: 404 });
+  }
 }
-
