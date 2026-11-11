@@ -1,10 +1,12 @@
 import { TransfersRepository } from "@/lib/repositories/transfers.repository";
+import { sendTransferEmails } from "@/lib/services/email.service";
 
 interface ProcessNewTransferParams {
   encryptedBlob: string;
   contentType: string;
   maxOpens: number;
   expiresInHours: number;
+  recipients?: string[];
 }
 
 interface TransferInfoResponse {
@@ -30,6 +32,10 @@ export const TransfersService = {
       contentType: params.contentType,
       encryptedBlob: params.encryptedBlob,
     });
+
+    if (params.recipients && params.recipients.length > 0) {
+      await sendTransferEmails(params.recipients, accessCode);
+    }
 
     return accessCode;
   },
