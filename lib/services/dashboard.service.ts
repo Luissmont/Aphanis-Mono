@@ -1,11 +1,11 @@
 import { DashboardRepository } from "@/lib/repositories/dashboard.repository";
 
 export const DashboardService = {
-  async fetchHistory() {
-    return await DashboardRepository.getTransferHistory();
+  async fetchHistory(userId: string) {
+    return await DashboardRepository.getTransferHistory(userId);
   },
 
-  async fetchGroups() {
-    return await DashboardRepository.getGroups();
+  async fetchGroups(userId: string) {
+    return await DashboardRepository.getGroups(userId);
   },
 };

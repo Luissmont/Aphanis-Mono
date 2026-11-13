@@ -7,6 +7,7 @@ interface ProcessNewTransferParams {
   maxOpens: number;
   expiresInHours: number;
   recipients?: string[];
+  userId: string;
 }
 
 interface TransferInfoResponse {
@@ -31,6 +32,7 @@ export const TransfersService = {
       expiresAt,
       contentType: params.contentType,
       encryptedBlob: params.encryptedBlob,
+      userId: params.userId,
     });
 
     if (params.recipients && params.recipients.length > 0) {

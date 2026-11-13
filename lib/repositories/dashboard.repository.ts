@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 interface TransferRecord {
   id: string;
@@ -18,10 +18,13 @@ interface GroupRecord {
 }
 
 export const DashboardRepository = {
-  async getTransferHistory(): Promise<TransferRecord[]> {
+  async getTransferHistory(userId: string): Promise<TransferRecord[]> {
+    const supabase = await createSupabaseServerClient();
+
     const { data, error } = await supabase
       .from("transfers")
       .select("id, access_code, status, created_at, expires_at, max_opens, current_opens")
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -31,10 +34,13 @@ export const DashboardRepository = {
     return (data ?? []) as TransferRecord[];
   },
 
-  async getGroups(): Promise<GroupRecord[]> {
+  async getGroups(userId: string): Promise<GroupRecord[]> {
+    const supabase = await createSupabaseServerClient();
+
     const { data, error } = await supabase
       .from("groups")
-      .select("id, name, created_at, group_members(email)");
+      .select("id, name, created_at, group_members(email)")
+      .eq("user_id", userId);
 
     if (error) {
       throw new Error(error.message);

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 interface CreateTransferData {
   accessCode: string;
@@ -7,6 +8,7 @@ interface CreateTransferData {
   expiresAt: string;
   contentType: string;
   encryptedBlob: string;
+  userId: string;
 }
 
 interface TransferInfo {
@@ -25,13 +27,16 @@ interface RpcResult {
 
 export const TransfersRepository = {
   async createTransfer(data: CreateTransferData): Promise<void> {
-    const { data: transfer, error: transferError } = await supabase
+    const supabaseServer = await createSupabaseServerClient();
+
+    const { data: transfer, error: transferError } = await supabaseServer
       .from("transfers")
       .insert({
         access_code: data.accessCode,
         pin_hash: data.pinHash,
         max_opens: data.maxOpens,
         expires_at: data.expiresAt,
+        user_id: data.userId,
       })
       .select()
       .single();
@@ -40,7 +45,7 @@ export const TransfersRepository = {
       throw new Error(transferError.message);
     }
 
-    const { error: contentError } = await supabase
+    const { error: contentError } = await supabaseServer
       .from("transfer_contents")
       .insert({
         transfer_id: transfer.id,
