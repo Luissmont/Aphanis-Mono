@@ -18,14 +18,17 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  try {
+    const user = await AuthService.getCurrentUser();
 
-  const newGroup = {
-    id: "new_group_1",
-    name: body.name ?? "Nuevo Grupo",
-    membersCount: Array.isArray(body.emails) ? body.emails.length : 0,
-    message: "Grupo creado exitosamente",
-  };
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  return NextResponse.json(newGroup, { status: 201 });
+    const { name, emails } = await request.json();
+    const newGroup = await DashboardService.createGroup(user.id, name, emails ?? []);
+    return NextResponse.json(newGroup, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+  }
 }

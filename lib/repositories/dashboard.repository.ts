@@ -48,4 +48,30 @@ export const DashboardRepository = {
 
     return (data ?? []) as GroupRecord[];
   },
+
+  async insertGroup(userId: string, name: string): Promise<{ id: string; name: string; created_at: string }> {
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from("groups")
+      .insert({ user_id: userId, name })
+      .select("id, name, created_at")
+      .single();
+
+    if (error || !data) {
+      throw new Error(error?.message ?? "Error al crear el grupo");
+    }
+
+    return data as { id: string; name: string; created_at: string };
+  },
+
+  async insertGroupMembers(membersData: { group_id: string; email: string }[]): Promise<void> {
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase.from("group_members").insert(membersData);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
 };
