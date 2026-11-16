@@ -76,7 +76,7 @@ export const TransfersRepository = {
   async executeUnlock(accessCode: string): Promise<string> {
     const { data, error } = await supabase.rpc("process_transfer_opening", {
       p_access_code: accessCode,
-    });
+    }).single();
 
     if (error) {
       throw new Error(error.message);
