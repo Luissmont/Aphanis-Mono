@@ -11,13 +11,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { encrypted_blob, content_type, max_opens, expires_in_hours, recipients } = body;
+    const { encrypted_blob, content_type, max_opens, expires_in_hours, pin_hash, recipients } = body;
 
     const accessCode = await TransfersService.processNewTransfer({
       encryptedBlob: encrypted_blob,
       contentType: content_type,
       maxOpens: max_opens,
       expiresInHours: expires_in_hours,
+      pinHash: pin_hash,
       recipients,
       userId: user.id,
     });

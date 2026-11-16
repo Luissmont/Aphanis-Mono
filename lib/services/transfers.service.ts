@@ -6,6 +6,7 @@ interface ProcessNewTransferParams {
   contentType: string;
   maxOpens: number;
   expiresInHours: number;
+  pinHash: string;
   recipients?: string[];
   userId: string;
 }
@@ -13,6 +14,7 @@ interface ProcessNewTransferParams {
 interface TransferInfoResponse {
   status: string;
   expires_at: string;
+  pin_hash: string;
   transfer_contents: {
     content_type: string;
     metadata: Record<string, unknown> | null;
@@ -27,7 +29,7 @@ export const TransfersService = {
 
     await TransfersRepository.createTransfer({
       accessCode,
-      pinHash: "hash_placeholder",
+      pinHash: params.pinHash,
       maxOpens: params.maxOpens,
       expiresAt,
       contentType: params.contentType,
@@ -52,7 +54,13 @@ export const TransfersService = {
     return transfer;
   },
 
-  async unlockTransfer(accessCode: string, _pinHash: string): Promise<string> {
+  async unlockTransfer(accessCode: string, incomingPinHash: string): Promise<string> {
+    const transfer = await TransfersRepository.getTransferByCode(accessCode);
+
+    if (transfer.pin_hash !== incomingPinHash) {
+      throw new Error("Invalid PIN");
+    }
+
     const encryptedBlob = await TransfersRepository.executeUnlock(accessCode);
     return encryptedBlob;
   },

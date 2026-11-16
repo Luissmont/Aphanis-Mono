@@ -8,7 +8,12 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const pinHash: string = body.pin_hash ?? "";
+    const pinHash: string | undefined = body.pin_hash;
+
+    if (!pinHash) {
+      return NextResponse.json({ error: "pin_hash is required" }, { status: 400 });
+    }
+
     const encryptedBlob = await TransfersService.unlockTransfer(id, pinHash);
     return NextResponse.json({ encrypted_blob: encryptedBlob });
   } catch (error) {
