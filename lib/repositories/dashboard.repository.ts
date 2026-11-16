@@ -74,4 +74,49 @@ export const DashboardRepository = {
       throw new Error(error.message);
     }
   },
+
+  async deleteGroupMembers(groupId: string): Promise<void> {
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("group_members")
+      .delete()
+      .eq("group_id", groupId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  async updateGroup(userId: string, groupId: string, name: string): Promise<{ id: string; name: string; created_at: string }> {
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from("groups")
+      .update({ name })
+      .eq("id", groupId)
+      .eq("user_id", userId)
+      .select("id, name, created_at")
+      .single();
+
+    if (error || !data) {
+      throw new Error(error?.message ?? "Error al actualizar el grupo");
+    }
+
+    return data as { id: string; name: string; created_at: string };
+  },
+
+  async deleteGroup(userId: string, groupId: string): Promise<void> {
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("groups")
+      .delete()
+      .eq("id", groupId)
+      .eq("user_id", userId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
 };
