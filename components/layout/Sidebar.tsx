@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Plus, Inbox, Users, History, LogIn } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Plus, Inbox, Users, History, LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface NavItem {
   label: string;
@@ -21,6 +22,14 @@ const NAV_ITEMS: NavItem[] = [
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <aside
@@ -86,20 +95,21 @@ export function Sidebar() {
         </div>
 
         <div className="pt-4 w-full">
-          <Link
-            href="/login"
-            className={`w-full py-3.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-[#CCFF00] font-bold text-sm flex items-center transition-all duration-200 hover:bg-white/10 hover:border-white/20 active:scale-[0.98] cursor-pointer ${
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className={`w-full py-3.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-bold text-sm flex items-center transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 active:scale-[0.98] cursor-pointer ${
               isCollapsed
                 ? "justify-center px-0"
                 : "justify-center px-4 text-center"
             }`}
-            title={isCollapsed ? "Iniciar Sesión / Registrarse" : undefined}
+            title={isCollapsed ? "Cerrar Sesión" : undefined}
           >
-            <LogIn className="w-5 h-5 shrink-0" />
+            <LogOut className="w-5 h-5 shrink-0" />
             {!isCollapsed && (
-              <span className="ml-2 truncate">Iniciar Sesión</span>
+              <span className="ml-2 truncate">Cerrar Sesión</span>
             )}
-          </Link>
+          </button>
         </div>
       </div>
     </aside>
