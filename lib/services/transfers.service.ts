@@ -12,6 +12,14 @@ interface ProcessNewTransferParams {
   userId: string;
 }
 
+interface ProcessTransferResult {
+  accessCode: string;
+  emailStatus?: {
+    sent: boolean;
+    warning?: string;
+  };
+}
+
 interface TransferInfoResponse {
   status: string;
   expires_at: string;
@@ -31,7 +39,9 @@ interface AttemptRecord {
 const unlockAttempts = new Map<string, AttemptRecord>();
 
 export const TransfersService = {
-  async processNewTransfer(params: ProcessNewTransferParams): Promise<string> {
+  async processNewTransfer(
+    params: ProcessNewTransferParams
+  ): Promise<ProcessTransferResult> {
     const accessCode = randomBytes(4).toString("hex").toUpperCase();
     const hours = params.expiresInHours ?? 24;
     const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
@@ -47,15 +57,21 @@ export const TransfersService = {
       recipients: params.recipients || [],
     });
 
+    let emailStatus: { sent: boolean; warning?: string } | undefined;
+
     if (params.recipients && params.recipients.length > 0) {
       try {
-        await sendTransferEmails(params.recipients, accessCode);
+        emailStatus = await sendTransferEmails(params.recipients, accessCode);
       } catch (emailError) {
         console.error("Error enviando notificaciones:", emailError);
+        emailStatus = {
+          sent: false,
+          warning: "Error inesperado al conectar con el servicio de correo.",
+        };
       }
     }
 
-    return accessCode;
+    return { accessCode, emailStatus };
   },
 
   async getTransferInfo(accessCode: string): Promise<TransferInfoResponse> {

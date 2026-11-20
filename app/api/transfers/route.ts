@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       sanitizedRecipients = Array.from(new Set(rawList));
     }
 
-    const accessCode = await TransfersService.processNewTransfer({
+    const result = await TransfersService.processNewTransfer({
       encryptedBlob: encrypted_blob,
       contentType: content_type,
       maxOpens: max_opens,
@@ -120,7 +120,14 @@ export async function POST(request: Request) {
       userId: user.id,
     });
 
-    return NextResponse.json({ access_code: accessCode }, { status: 201 });
+    return NextResponse.json(
+      {
+        access_code: result.accessCode,
+        email_status: result.emailStatus,
+        warning: result.emailStatus?.warning,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json(

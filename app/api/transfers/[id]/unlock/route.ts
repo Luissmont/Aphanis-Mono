@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { TransfersService } from "@/lib/services/transfers.service";
+import { TransfersRepository } from "@/lib/repositories/transfers.repository";
 import { AuthService } from "@/lib/services/auth.service";
 
 export async function POST(
@@ -20,6 +21,10 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    const transferInfo = await TransfersRepository.getTransferByCode(id).catch(
+      () => null
+    );
 
     let encryptedBlob: string;
 
@@ -67,7 +72,10 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ encrypted_blob: encryptedBlob });
+    return NextResponse.json({
+      encrypted_blob: encryptedBlob,
+      expires_at: transferInfo?.expires_at || null,
+    });
   } catch (error) {
     console.error(error);
     const message = (error as Error).message || "";

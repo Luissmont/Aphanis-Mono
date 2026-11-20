@@ -15,7 +15,7 @@ import {
   hashPin,
   bytesToBase64,
 } from "@/lib/crypto";
-import { CheckCircle2, Copy } from "lucide-react";
+import { CheckCircle2, Copy, AlertTriangle } from "lucide-react";
 
 export default function Home() {
   const [contentType, setContentType] = useState<"text" | "file">("text");
@@ -32,6 +32,7 @@ export default function Home() {
   const [createdTransfer, setCreatedTransfer] = useState<{
     accessCode: string;
     pin: string;
+    warning?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -157,6 +158,11 @@ export default function Home() {
       setCreatedTransfer({
         accessCode: result.access_code,
         pin,
+        warning:
+          result.warning ||
+          (result.email_status && !result.email_status.sent
+            ? result.email_status.warning
+            : undefined),
       });
     } catch (err) {
       setError((err as Error).message);
@@ -233,6 +239,18 @@ export default function Home() {
               para desbloquear el paquete.
             </p>
           </div>
+
+          {createdTransfer.warning && (
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex items-start gap-3 text-yellow-300 text-xs sm:text-sm">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-yellow-400" />
+              <div>
+                <strong className="block font-bold mb-0.5 text-yellow-400">
+                  Aviso sobre las notificaciones por correo:
+                </strong>
+                <span>{createdTransfer.warning}</span>
+              </div>
+            </div>
+          )}
 
           <button
             type="button"

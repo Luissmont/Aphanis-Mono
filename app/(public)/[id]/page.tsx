@@ -208,6 +208,9 @@ export default function DecryptPage() {
       }
 
       const data = await response.json();
+      if (data.expires_at) {
+        setExpiresAt(data.expires_at);
+      }
       const key = await importKeyFromPin(pin);
       const decryptedBytes = await decryptData(data.encrypted_blob, key);
       const raw = new TextDecoder().decode(decryptedBytes);

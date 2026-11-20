@@ -16,6 +16,7 @@ export default function RecibirPage() {
 
   const [decryptedText, setDecryptedText] = useState<string | null>(null);
   const [decryptedFile, setDecryptedFile] = useState<DecryptedFile | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +56,8 @@ export default function RecibirPage() {
       }
 
       const data = await response.json();
+      setExpiresAt(data.expires_at || null);
+
       const key = await importKeyFromPin(pin);
       const decryptedBytes = await decryptData(data.encrypted_blob, key);
       const raw = new TextDecoder().decode(decryptedBytes);
@@ -79,6 +82,7 @@ export default function RecibirPage() {
   const handleReset = () => {
     setDecryptedText(null);
     setDecryptedFile(null);
+    setExpiresAt(null);
     setAccessCodeInput("");
     setPin("");
     setError("");
@@ -99,6 +103,7 @@ export default function RecibirPage() {
         <DecryptedContent
           decryptedText={decryptedText}
           decryptedFile={decryptedFile}
+          expiresAt={expiresAt}
           onReset={handleReset}
         />
       </div>
@@ -120,65 +125,89 @@ export default function RecibirPage() {
             Recibir transferencia
           </h1>
           <p className="text-zinc-400 mt-2 text-sm sm:text-base">
-            Ingresa el código único y el PIN para acceder al contenido.
+            Ingresa el código o enlace recibido y el PIN correspondiente para
+            descifrar el paquete.
           </p>
         </div>
       </header>
 
-      <div className="max-w-xl mt-12 bg-[#1C1C1E] border border-white/5 rounded-[28px] p-6 sm:p-8 shadow-2xl">
-        <form onSubmit={handleUnlock} className="flex flex-col">
-          <div className="mb-6">
-            <label className="text-xs text-zinc-400 block mb-2 font-medium">
-              Código del paquete o enlace
-            </label>
-            <input
-              type="text"
-              required
-              value={accessCodeInput}
-              onChange={(e) => setAccessCodeInput(e.target.value)}
-              placeholder="Ej: APH-9X2M o https://.../APH-9X2M"
-              className="w-full bg-black/50 border border-white/5 rounded-full py-3.5 px-5 text-sm text-white placeholder-zinc-500 outline-none focus:border-[#CCFF00]/50 transition-colors font-mono tracking-wider"
-            />
-          </div>
-
-          <div className="mb-6">
-            <label className="text-xs text-zinc-400 block mb-2 font-medium">
-              PIN de descifrado
-            </label>
-            <input
-              type="password"
-              required
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              placeholder="Introduce el PIN secreto"
-              className="w-full bg-black/50 border border-white/5 rounded-full py-3.5 px-5 text-sm text-white placeholder-zinc-500 font-mono tracking-widest outline-none focus:border-[#CCFF00]/50 transition-colors"
-            />
-          </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-semibold">
-              {error}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
+        <div className="bg-[#1C1C1E] border border-white/5 rounded-[28px] p-8 shadow-2xl flex flex-col justify-between">
+          <form onSubmit={handleUnlock} className="flex flex-col gap-6">
+            <div>
+              <span className="text-xs text-zinc-400 uppercase font-bold tracking-wider block mb-2">
+                Paso 1
+              </span>
+              <label className="text-base font-bold text-white block mb-2">
+                Código de transferencia o Enlace
+              </label>
+              <input
+                type="text"
+                required
+                value={accessCodeInput}
+                onChange={(e) => setAccessCodeInput(e.target.value)}
+                placeholder="Ej. A1B2C3D4 o https://.../A1B2C3D4"
+                className="w-full bg-black/50 border border-white/5 rounded-full py-3.5 px-5 text-sm text-white placeholder-zinc-500 font-mono outline-none focus:border-[#CCFF00]/50 transition-colors"
+              />
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={isProcessing}
-            className="w-full bg-[#CCFF00] hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed text-black font-bold text-base py-3.5 rounded-full transition-transform cursor-pointer mt-2 shadow-[0_0_20px_rgba(204,255,0,0.25)] uppercase flex items-center justify-center gap-2"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Desencriptando...</span>
-              </>
-            ) : (
-              <>
-                <Lock className="w-4 h-4" />
-                <span>Buscar y desencriptar</span>
-              </>
+            <div>
+              <span className="text-xs text-zinc-400 uppercase font-bold tracking-wider block mb-2">
+                Paso 2
+              </span>
+              <label className="text-base font-bold text-white block mb-2">
+                PIN de descifrado
+              </label>
+              <input
+                type="password"
+                required
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                placeholder="PIN secreto de 4 a 8 caracteres"
+                className="w-full bg-black/50 border border-white/5 rounded-full py-3.5 px-5 text-sm text-white placeholder-zinc-500 font-mono tracking-widest outline-none focus:border-[#CCFF00]/50 transition-colors"
+              />
+            </div>
+
+            {error && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-semibold">
+                {error}
+              </div>
             )}
-          </button>
-        </form>
+
+            <button
+              type="submit"
+              disabled={isProcessing}
+              className="mt-2 bg-[#CCFF00] hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed text-black font-bold py-3.5 px-8 rounded-full transition-transform cursor-pointer shadow-[0_0_20px_rgba(204,255,0,0.3)] text-sm uppercase tracking-wide flex items-center justify-center gap-2"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Descifrando paquete...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>Desbloquear y Ver</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        <div className="bg-[#1C1C1E]/60 border border-white/5 rounded-[28px] p-8 flex flex-col justify-center">
+          <h2 className="text-lg font-bold text-white mb-2">
+            Seguridad Cero Conocimiento
+          </h2>
+          <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+            Al presionar &ldquo;Desbloquear y Ver&rdquo;, el navegador descarga
+            el paquete cifrado y utiliza el PIN para derivar la clave simétrica
+            AES-256-GCM.
+          </p>
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            El contenido se descifra de manera exclusiva y privada en la memoria
+            de este dispositivo.
+          </p>
+        </div>
       </div>
     </div>
   );

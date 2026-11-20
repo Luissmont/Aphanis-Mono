@@ -1,14 +1,22 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const apiKey = process.env.RESEND_API_KEY;
+if (!apiKey) {
+  console.warn("ADVERTENCIA: RESEND_API_KEY no está definida en las variables de entorno.");
+}
+
+const resend = new Resend(apiKey);
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Aphanis <onboarding@resend.dev>";
 
 export async function sendTransferEmails(
   recipients: string[],
   accessCode: string
-): Promise<void> {
+): Promise<{ sent: boolean; warning?: string }> {
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
   const transferUrl = `${appUrl}/${accessCode}`;
+
+  let hasError = false;
+  let firstErrorMessage = "";
 
   await Promise.all(
     recipients.map(async (email) => {
@@ -71,10 +79,25 @@ export async function sendTransferEmails(
 
       if (error) {
         console.error("Resend API Error:", error);
+        hasError = true;
+        if (!firstErrorMessage && error.message) {
+          firstErrorMessage = error.message;
+        }
       }
       return data;
     })
   );
+
+  if (hasError) {
+    return {
+      sent: false,
+      warning:
+        firstErrorMessage ||
+        "No se pudieron enviar algunas notificaciones. En modo de prueba de Resend solo se permite enviar al correo registrado en tu cuenta.",
+    };
+  }
+
+  return { sent: true };
 }
 
 export async function sendOtpEmail(
