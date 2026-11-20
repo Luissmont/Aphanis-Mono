@@ -15,7 +15,9 @@ interface ProcessNewTransferParams {
 interface TransferInfoResponse {
   status: string;
   expires_at: string;
-  transfer_contents: {
+  content_type?: string;
+  requires_otp?: boolean;
+  transfer_contents?: {
     content_type: string;
     metadata: Record<string, unknown> | null;
   }[];
@@ -42,7 +44,7 @@ export const TransfersService = {
       contentType: params.contentType,
       encryptedBlob: params.encryptedBlob,
       userId: params.userId,
-      recipients: params.recipients,
+      recipients: params.recipients || [],
     });
 
     if (params.recipients && params.recipients.length > 0) {
@@ -66,45 +68,11 @@ export const TransfersService = {
     return transfer;
   },
 
-  async unlockTransfer(accessCode: string, incomingPinHash: string): Promise<string> {
-    const now = Date.now();
-    const attempt = unlockAttempts.get(accessCode);
-
-    if (attempt && attempt.blockedUntil > now) {
-      throw new Error("Demasiados intentos fallidos. Intenta más tarde.");
-    }
-
-    const transfer = await TransfersRepository.getTransferWithPinHash(accessCode);
-
-    if (transfer.status !== "active" || new Date(transfer.expires_at).getTime() <= now) {
-      throw new Error("Transferencia caducada");
-    }
-
-    if (transfer.pin_hash !== incomingPinHash) {
-      const currentCount =
-        attempt?.blockedUntil && attempt.blockedUntil <= now
-          ? 1
-          : (attempt?.count ?? 0) + 1;
-      const blockedUntil = currentCount >= 5 ? now + 15 * 60 * 1000 : 0;
-      unlockAttempts.set(accessCode, { count: currentCount, blockedUntil });
-
-      if (blockedUntil > now) {
-        throw new Error("Demasiados intentos fallidos. Intenta más tarde.");
-      }
-      throw new Error("Invalid PIN");
-    }
-
-    unlockAttempts.delete(accessCode);
-
-    const encryptedBlob = await TransfersRepository.executeUnlock(accessCode);
-    return encryptedBlob;
-  },
-
-  async unlockPublicTransfer(
+  async unlockTransfer(
     accessCode: string,
-    email: string,
-    otpCode: string,
-    pinHash: string
+    pinHash: string,
+    email: string | null = null,
+    otpCode: string | null = null
   ): Promise<string> {
     const now = Date.now();
     const attempt = unlockAttempts.get(accessCode);
@@ -139,6 +107,15 @@ export const TransfersService = {
     }
   },
 
+  async unlockPublicTransfer(
+    accessCode: string,
+    email: string | null,
+    otpCode: string | null,
+    pinHash: string
+  ): Promise<string> {
+    return this.unlockTransfer(accessCode, pinHash, email, otpCode);
+  },
+
   async unlockAuthenticatedTransfer(
     accessCode: string,
     userEmail: string,
@@ -152,11 +129,12 @@ export const TransfersService = {
     }
 
     try {
-      const encryptedBlob = await TransfersRepository.unlockTransferAuthenticated(
-        accessCode,
-        userEmail,
-        pinHash
-      );
+      const encryptedBlob =
+        await TransfersRepository.unlockTransferAuthenticated(
+          accessCode,
+          userEmail,
+          pinHash
+        );
       unlockAttempts.delete(accessCode);
       return encryptedBlob;
     } catch (err) {

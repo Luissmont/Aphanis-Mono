@@ -70,38 +70,44 @@ export async function POST(request: Request) {
       );
     }
 
-    if (
-      !Array.isArray(recipients) ||
-      recipients.length === 0 ||
-      recipients.length > 30
-    ) {
-      return NextResponse.json(
-        { error: "Debes incluir entre 1 y 30 destinatarios permitidos" },
-        { status: 400 }
+    let sanitizedRecipients: string[] = [];
+
+    if (recipients !== undefined && recipients !== null) {
+      if (!Array.isArray(recipients)) {
+        return NextResponse.json(
+          { error: "recipients debe ser una lista de correos" },
+          { status: 400 }
+        );
+      }
+
+      if (recipients.length > 30) {
+        return NextResponse.json(
+          { error: "No puedes incluir más de 30 destinatarios" },
+          { status: 400 }
+        );
+      }
+
+      const rawList = recipients
+        .map((e: unknown) =>
+          typeof e === "string" ? e.trim().toLowerCase() : ""
+        )
+        .filter(Boolean);
+
+      const allValid = rawList.every((email: string) =>
+        EMAIL_REGEX.test(email)
       );
-    }
 
-    const allValid = recipients.every(
-      (email: unknown) =>
-        typeof email === "string" && EMAIL_REGEX.test(email.trim())
-    );
+      if (!allValid) {
+        return NextResponse.json(
+          {
+            error:
+              "Uno o más destinatarios no tienen un formato de correo válido",
+          },
+          { status: 400 }
+        );
+      }
 
-    if (!allValid) {
-      return NextResponse.json(
-        { error: "Uno o más destinatarios no tienen un formato de correo válido" },
-        { status: 400 }
-      );
-    }
-
-    const sanitizedRecipients = Array.from(
-      new Set(recipients.map((email: string) => email.trim().toLowerCase()))
-    );
-
-    if (sanitizedRecipients.length === 0) {
-      return NextResponse.json(
-        { error: "Debes incluir al menos un destinatario válido" },
-        { status: 400 }
-      );
+      sanitizedRecipients = Array.from(new Set(rawList));
     }
 
     const accessCode = await TransfersService.processNewTransfer({

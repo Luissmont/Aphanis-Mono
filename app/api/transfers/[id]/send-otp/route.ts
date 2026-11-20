@@ -41,9 +41,26 @@ export async function POST(
 
     if (isAuthorized) {
       try {
-        await sendOtpEmail(email, otp, accessCode);
+        const { error: resendError } = await sendOtpEmail(
+          email,
+          otp,
+          accessCode
+        );
+        if (resendError) {
+          console.error("Resend API Error al enviar OTP:", resendError);
+          return NextResponse.json({
+            sent: false,
+            warning:
+              "El código fue generado pero Resend rechazó el envío (posible restricción de cuenta gratuita en modo prueba: solo se permite enviar a correos verificados).",
+          });
+        }
       } catch (emailError) {
         console.error("Error enviando OTP via Resend:", emailError);
+        return NextResponse.json({
+          sent: false,
+          warning:
+            "Ocurrió un error al intentar enviar el correo mediante Resend.",
+        });
       }
       return NextResponse.json({ sent: true });
     }

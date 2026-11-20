@@ -1,15 +1,19 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Aphanis <onboarding@resend.dev>";
 
-export async function sendTransferEmails(recipients: string[], accessCode: string): Promise<void> {
+export async function sendTransferEmails(
+  recipients: string[],
+  accessCode: string
+): Promise<void> {
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
   const transferUrl = `${appUrl}/${accessCode}`;
 
   await Promise.all(
-    recipients.map((email) =>
-      resend.emails.send({
-        from: "APHANIS <onboarding@resend.dev>",
+    recipients.map(async (email) => {
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
         to: email,
         subject: "Tienes un nuevo paquete cifrado esperándote 🔐",
         html: `
@@ -63,14 +67,23 @@ export async function sendTransferEmails(recipients: string[], accessCode: strin
     </table>
   </body>
 </html>`,
-      })
-    )
+      });
+
+      if (error) {
+        console.error("Resend API Error:", error);
+      }
+      return data;
+    })
   );
 }
 
-export async function sendOtpEmail(email: string, otp: string, accessCode: string): Promise<void> {
-  await resend.emails.send({
-    from: "APHANIS <onboarding@resend.dev>",
+export async function sendOtpEmail(
+  email: string,
+  otp: string,
+  accessCode: string
+): Promise<{ data: unknown; error: unknown }> {
+  const { data, error } = await resend.emails.send({
+    from: FROM_EMAIL,
     to: email,
     subject: `Tu código de verificación para el paquete ${accessCode}: ${otp} 🔐`,
     html: `
@@ -111,4 +124,10 @@ export async function sendOtpEmail(email: string, otp: string, accessCode: strin
   </body>
 </html>`,
   });
+
+  if (error) {
+    console.error("Resend API Error:", error);
+  }
+
+  return { data, error };
 }

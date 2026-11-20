@@ -98,9 +98,17 @@ export default function Home() {
       )
     );
 
-    if (cleanRecipients.length === 0) {
-      setError("Debes incluir al menos un destinatario autorizado para la transferencia.");
+    if (cleanRecipients.length > 30) {
+      setError("El límite máximo es de 30 destinatarios.");
       return;
+    }
+
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of cleanRecipients) {
+      if (!EMAIL_REGEX.test(email)) {
+        setError(`El formato de correo "${email}" no es válido.`);
+        return;
+      }
     }
 
     try {

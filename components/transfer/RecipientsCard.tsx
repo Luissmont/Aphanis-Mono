@@ -48,8 +48,11 @@ export function RecipientsCard({
         <div className="mb-4">
           <span className="text-xs text-zinc-400 block">04</span>
           <h2 className="text-base sm:text-lg font-bold text-white">
-            Destinatarios (Whitelist)
+            Destinatarios (Opcional)
           </h2>
+          <p className="text-xs text-zinc-500 mt-1">
+            Vacío: Modo Abierto (solo PIN). Con correos: Modo Whitelist (OTP 2FA).
+          </p>
         </div>
 
         <div className="mb-4">

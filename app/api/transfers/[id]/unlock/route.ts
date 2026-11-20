@@ -29,26 +29,42 @@ export async function POST(
       email.trim() &&
       otpCode.trim()
     ) {
-      encryptedBlob = await TransfersService.unlockPublicTransfer(
+      encryptedBlob = await TransfersService.unlockTransfer(
         id,
+        pinHash,
         email.trim().toLowerCase(),
-        otpCode.trim(),
-        pinHash
+        otpCode.trim()
       );
     } else {
-      const user = await AuthService.getCurrentUser();
-      if (!user || !user.email) {
-        return NextResponse.json(
-          { error: "Se requiere sesión activa para el desbloqueo autenticado" },
-          { status: 401 }
+      const user = await AuthService.getCurrentUser().catch(() => null);
+      if (user?.email) {
+        try {
+          encryptedBlob = await TransfersService.unlockAuthenticatedTransfer(
+            id,
+            user.email.trim().toLowerCase(),
+            pinHash
+          );
+        } catch (authErr) {
+          const msg = (authErr as Error).message || "";
+          if (/UNAUTHORIZED_EMAIL|INVALID_OTP/i.test(msg)) {
+            encryptedBlob = await TransfersService.unlockTransfer(
+              id,
+              pinHash,
+              null,
+              null
+            );
+          } else {
+            throw authErr;
+          }
+        }
+      } else {
+        encryptedBlob = await TransfersService.unlockTransfer(
+          id,
+          pinHash,
+          null,
+          null
         );
       }
-
-      encryptedBlob = await TransfersService.unlockAuthenticatedTransfer(
-        id,
-        user.email.trim().toLowerCase(),
-        pinHash
-      );
     }
 
     return NextResponse.json({ encrypted_blob: encryptedBlob });

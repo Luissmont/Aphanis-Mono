@@ -15,7 +15,9 @@ interface CreateTransferData {
 interface TransferInfo {
   status: string;
   expires_at: string;
-  transfer_contents: {
+  content_type?: string;
+  requires_otp?: boolean;
+  transfer_contents?: {
     content_type: string;
     metadata: Record<string, unknown> | null;
   }[];
@@ -29,6 +31,7 @@ interface TransferWithPinHash {
 
 interface RpcResult {
   is_valid: boolean;
+  error_code?: string;
   transfer_id?: string;
   encrypted_blob?: string;
 }
@@ -65,17 +68,19 @@ export const TransfersRepository = {
       throw new Error(contentError.message);
     }
 
-    const recipientsData = data.recipients.map((email) => ({
-      transfer_id: transfer.id,
-      email,
-    }));
+    if (data.recipients && data.recipients.length > 0) {
+      const recipientsData = data.recipients.map((email) => ({
+        transfer_id: transfer.id,
+        email,
+      }));
 
-    const { error: recipientsError } = await supabaseServer
-      .from("transfer_recipients")
-      .insert(recipientsData);
+      const { error: recipientsError } = await supabaseServer
+        .from("transfer_recipients")
+        .insert(recipientsData);
 
-    if (recipientsError) {
-      throw new Error(recipientsError.message);
+      if (recipientsError) {
+        throw new Error(recipientsError.message);
+      }
     }
   },
 
@@ -127,8 +132,8 @@ export const TransfersRepository = {
 
   async verifyAndUnlockTransfer(
     accessCode: string,
-    email: string,
-    otpCode: string,
+    email: string | null,
+    otpCode: string | null,
     pinHash: string
   ): Promise<string> {
     const { data, error } = await supabase
@@ -147,7 +152,9 @@ export const TransfersRepository = {
     const result = data as RpcResult;
 
     if (!result || !result.is_valid || !result.encrypted_blob) {
-      throw new Error("Transferencia destruida o inválida");
+      throw new Error(
+        (result && result.error_code) || "Transferencia destruida o inválida"
+      );
     }
 
     return result.encrypted_blob;
@@ -174,7 +181,9 @@ export const TransfersRepository = {
     const result = data as RpcResult;
 
     if (!result || !result.is_valid || !result.encrypted_blob) {
-      throw new Error("Transferencia destruida o inválida");
+      throw new Error(
+        (result && result.error_code) || "Transferencia destruida o inválida"
+      );
     }
 
     return result.encrypted_blob;
