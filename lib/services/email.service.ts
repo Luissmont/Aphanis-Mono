@@ -1,12 +1,81 @@
-import { Resend } from "resend";
-
-const apiKey = process.env.RESEND_API_KEY;
-if (!apiKey) {
-  console.warn("ADVERTENCIA: RESEND_API_KEY no está definida en las variables de entorno.");
+interface SendBrevoEmailParams {
+  to: string[];
+  subject: string;
+  htmlContent: string;
 }
 
-const resend = new Resend(apiKey);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Aphanis <onboarding@resend.dev>";
+interface BrevoResult {
+  success: boolean;
+  data?: unknown;
+  error?: unknown;
+  warning?: string;
+}
+
+async function sendBrevoEmail({
+  to,
+  subject,
+  htmlContent,
+}: SendBrevoEmailParams): Promise<BrevoResult> {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+
+  if (!apiKey || !senderEmail) {
+    const warning =
+      "Configuración de Brevo incompleta: falta BREVO_API_KEY o BREVO_SENDER_EMAIL.";
+    console.error(warning);
+    return {
+      success: false,
+      error: new Error(warning),
+      warning,
+    };
+  }
+
+  try {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": apiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "Aphanis",
+          email: senderEmail,
+        },
+        to: to.map((email) => ({ email })),
+        subject,
+        htmlContent,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const errorMsg =
+        (errorData && (errorData.message || JSON.stringify(errorData))) ||
+        `Brevo API HTTP ${response.status}: ${response.statusText}`;
+      console.error("Brevo API Error:", errorMsg);
+      return {
+        success: false,
+        error: errorData || new Error(errorMsg),
+        warning: errorMsg,
+      };
+    }
+
+    const data = await response.json().catch(() => null);
+    return {
+      success: true,
+      data,
+    };
+  } catch (err) {
+    console.error("Error conectando con Brevo API:", err);
+    return {
+      success: false,
+      error: err,
+      warning: (err as Error).message || "Error al conectar con Brevo API.",
+    };
+  }
+}
 
 export async function sendTransferEmails(
   recipients: string[],
@@ -20,11 +89,10 @@ export async function sendTransferEmails(
 
   await Promise.all(
     recipients.map(async (email) => {
-      const { data, error } = await resend.emails.send({
-        from: FROM_EMAIL,
-        to: email,
+      const result = await sendBrevoEmail({
+        to: [email],
         subject: "Tienes un nuevo paquete cifrado esperándote 🔐",
-        html: `
+        htmlContent: `
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -77,14 +145,12 @@ export async function sendTransferEmails(
 </html>`,
       });
 
-      if (error) {
-        console.error("Resend API Error:", error);
+      if (!result.success) {
         hasError = true;
-        if (!firstErrorMessage && error.message) {
-          firstErrorMessage = error.message;
+        if (!firstErrorMessage && result.warning) {
+          firstErrorMessage = result.warning;
         }
       }
-      return data;
     })
   );
 
@@ -93,7 +159,7 @@ export async function sendTransferEmails(
       sent: false,
       warning:
         firstErrorMessage ||
-        "No se pudieron enviar algunas notificaciones. En modo de prueba de Resend solo se permite enviar al correo registrado en tu cuenta.",
+        "No se pudieron enviar algunas notificaciones a través de Brevo.",
     };
   }
 
@@ -105,11 +171,10 @@ export async function sendOtpEmail(
   otp: string,
   accessCode: string
 ): Promise<{ data: unknown; error: unknown }> {
-  const { data, error } = await resend.emails.send({
-    from: FROM_EMAIL,
-    to: email,
+  const result = await sendBrevoEmail({
+    to: [email],
     subject: `Tu código de verificación para el paquete ${accessCode}: ${otp} 🔐`,
-    html: `
+    htmlContent: `
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -148,9 +213,8 @@ export async function sendOtpEmail(
 </html>`,
   });
 
-  if (error) {
-    console.error("Resend API Error:", error);
-  }
-
-  return { data, error };
+  return {
+    data: result.data || null,
+    error: result.success ? null : result.error || new Error(result.warning),
+  };
 }
