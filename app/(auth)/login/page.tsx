@@ -16,9 +16,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const isConfigured = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!isConfigured) {
+      setError("Configura NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en las variables de entorno de Vercel.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -46,6 +56,12 @@ export default function LoginPage() {
       <h1 className="font-sans text-4xl uppercase text-[#CCFF00] tracking-wide font-black">
         INICIA SESIÓN
       </h1>
+
+      {!isConfigured && (
+        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs font-semibold">
+          Faltan configurar NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en Vercel.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>

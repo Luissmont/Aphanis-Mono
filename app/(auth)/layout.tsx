@@ -7,10 +7,15 @@ export default function AuthLayout({
 }>) {
   return (
     <div
-      className="min-h-screen w-full flex flex-col lg:flex-row bg-black bg-no-repeat bg-left bg-cover"
-      style={{ backgroundImage: "url('/auth-bg.png')" }}
+      className="min-h-screen w-full flex flex-col lg:flex-row bg-black bg-no-repeat bg-left bg-cover relative overflow-x-hidden"
+      style={{
+        backgroundImage: "url('/auth-bg.png')",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+        backgroundPosition: "left center",
+      }}
     >
-      <div className="hidden lg:flex w-1/2 flex-col items-center justify-center p-12 select-none">
+      <div className="hidden lg:flex w-1/2 flex-col items-center justify-center p-12 select-none relative z-10">
         <div className="relative w-36 h-32 mb-6">
           <div className="w-12 h-12 bg-black rotate-45 rounded-sm absolute top-0 left-1/2 -translate-x-1/2" />
           <svg viewBox="0 0 24 24" className="w-14 h-14 fill-black absolute bottom-0 left-0" aria-hidden="true">
@@ -23,7 +28,7 @@ export default function AuthLayout({
         </h1>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 relative z-10">
         <div className="w-full max-w-md bg-[#1C1C1E] rounded-[36px] p-8 sm:p-10 border border-white/5 shadow-2xl">
           {children}
         </div>
