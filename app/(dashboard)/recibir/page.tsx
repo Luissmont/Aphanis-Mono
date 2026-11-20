@@ -31,7 +31,7 @@ export default function RecibirPage() {
     }
 
     if (!pin.trim()) {
-      setError("Por favor ingresa el PIN de descifrado.");
+      setError("Por favor ingresa la llave de descifrado.");
       return;
     }
 
@@ -156,15 +156,15 @@ export default function RecibirPage() {
                 Paso 2
               </span>
               <label className="text-base font-bold text-white block mb-2">
-                PIN de descifrado
+                Llave de descifrado
               </label>
               <input
                 type="password"
                 required
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                placeholder="PIN secreto de 4 a 8 caracteres"
-                className="w-full bg-black/50 border border-white/5 rounded-full py-3.5 px-5 text-sm text-white placeholder-zinc-500 font-mono tracking-widest outline-none focus:border-[#CCFF00]/50 transition-colors"
+                placeholder="Llave criptográfica de 256 bits (Base64)"
+                className="w-full bg-black/50 border border-white/5 rounded-full py-3.5 px-5 text-sm text-white placeholder-zinc-500 font-mono outline-none focus:border-[#CCFF00]/50 transition-colors"
               />
             </div>
 

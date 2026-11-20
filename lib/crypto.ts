@@ -35,29 +35,16 @@ export async function generateSecureKey(): Promise<string> {
 }
 
 export async function importKeyFromPin(pin: string): Promise<CryptoKey> {
-  let rawKey: Uint8Array;
-  try {
-    const bytes = base64ToBytes(pin);
-    if (bytes.length === 32) {
-      rawKey = bytes;
-    } else {
-      const hashBuffer = await crypto.subtle.digest(
-        "SHA-256",
-        new TextEncoder().encode(pin)
-      );
-      rawKey = new Uint8Array(hashBuffer);
-    }
-  } catch {
-    const hashBuffer = await crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(pin)
+  const bytes = base64ToBytes(pin.trim());
+  if (bytes.length !== 32) {
+    throw new Error(
+      "Formato de llave inválido. Se requiere una llave criptográfica de 256 bits en Base64."
     );
-    rawKey = new Uint8Array(hashBuffer);
   }
 
   return crypto.subtle.importKey(
     "raw",
-    rawKey as unknown as BufferSource,
+    bytes as unknown as BufferSource,
     { name: "AES-GCM" },
     false,
     ["encrypt", "decrypt"]

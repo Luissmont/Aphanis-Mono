@@ -158,7 +158,7 @@ function DecryptContent() {
     setError("");
 
     if (!pin.trim()) {
-      setError("Por favor ingresa el PIN de descifrado.");
+      setError("Por favor ingresa la llave de descifrado.");
       return;
     }
 
@@ -389,14 +389,14 @@ function DecryptContent() {
                     2
                   </span>
                   <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                    Paso B: Introduce el PIN
+                    Paso B: Introduce la llave
                   </h2>
                 </>
               ) : (
                 <>
                   <KeyRound className="w-5 h-5 text-[#CCFF00]" />
                   <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                    Introduce el PIN de descifrado
+                    Introduce la llave de descifrado
                   </h2>
                 </>
               )}
@@ -407,10 +407,10 @@ function DecryptContent() {
                 <input
                   type="password"
                   required
-                  placeholder="Introduce el PIN de descifrado"
+                  placeholder="Llave criptográfica de 256 bits (Base64)"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-full py-3 px-5 text-sm text-white placeholder-zinc-500 font-mono tracking-widest outline-none focus:border-[#CCFF00]/50 transition-colors"
+                  className="w-full bg-black/50 border border-white/10 rounded-full py-3 px-5 text-sm text-white placeholder-zinc-500 font-mono outline-none focus:border-[#CCFF00]/50 transition-colors"
                 />
                 <KeyRound className="w-4 h-4 text-zinc-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>

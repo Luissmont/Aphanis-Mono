@@ -36,30 +36,58 @@ export async function POST(
     );
 
     if (error) {
+      const msg = error.message || "";
+      if (/OTP_COOLDOWN/i.test(msg)) {
+        return NextResponse.json(
+          {
+            error:
+              "Debes esperar 60 segundos antes de solicitar otro código de verificación.",
+          },
+          { status: 429 }
+        );
+      }
+      if (/MAX_OTP_EXCEEDED/i.test(msg)) {
+        return NextResponse.json(
+          {
+            error:
+              "Has alcanzado el límite máximo de solicitudes de código para esta transferencia.",
+          },
+          { status: 429 }
+        );
+      }
+      if (/TOO_MANY_ATTEMPTS|bloqueada/i.test(msg)) {
+        return NextResponse.json(
+          {
+            error:
+              "Transferencia bloqueada temporalmente por demasiados intentos fallidos.",
+          },
+          { status: 429 }
+        );
+      }
       console.error("Error en request_transfer_otp:", error);
     }
 
     if (isAuthorized) {
       try {
-        const { error: resendError } = await sendOtpEmail(
+        const { error: brevoError } = await sendOtpEmail(
           email,
           otp,
           accessCode
         );
-        if (resendError) {
-          console.error("Resend API Error al enviar OTP:", resendError);
+        if (brevoError) {
+          console.error("Brevo API Error al enviar OTP:", brevoError);
           return NextResponse.json({
             sent: false,
             warning:
-              "El código fue generado pero Resend rechazó el envío (posible restricción de cuenta gratuita en modo prueba: solo se permite enviar a correos verificados).",
+              "El código fue generado pero el servicio de Brevo no pudo entregar el correo en este momento.",
           });
         }
       } catch (emailError) {
-        console.error("Error enviando OTP via Resend:", emailError);
+        console.error("Error enviando OTP via Brevo:", emailError);
         return NextResponse.json({
           sent: false,
           warning:
-            "Ocurrió un error al intentar enviar el correo mediante Resend.",
+            "Ocurrió un error al intentar enviar el correo mediante Brevo.",
         });
       }
       return NextResponse.json({ sent: true });

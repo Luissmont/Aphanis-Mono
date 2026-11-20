@@ -36,6 +36,10 @@ export default function Home() {
   } | null>(null);
 
   useEffect(() => {
+    generateSecureKey().then(setPin);
+  }, []);
+
+  useEffect(() => {
     fetch("/api/groups")
       .then((res) => {
         if (res.ok) return res.json();
@@ -82,12 +86,7 @@ export default function Home() {
     }
 
     if (!pin.trim()) {
-      setError("Por favor ingresa o genera un PIN de descifrado.");
-      return;
-    }
-
-    if (pin.trim().length < 6) {
-      setError("El PIN debe tener al menos 6 caracteres para garantizar la seguridad.");
+      setError("Por favor genera una llave de descifrado válida.");
       return;
     }
 
@@ -258,7 +257,7 @@ export default function Home() {
               setCreatedTransfer(null);
               setSecretText("");
               setSelectedFile(null);
-              setPin("");
+              generateSecureKey().then(setPin);
               setRecipients([""]);
             }}
             className="mt-2 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold py-2.5 px-6 rounded-full self-start transition-colors cursor-pointer"

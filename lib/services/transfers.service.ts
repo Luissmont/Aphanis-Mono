@@ -31,13 +31,6 @@ interface TransferInfoResponse {
   }[];
 }
 
-interface AttemptRecord {
-  count: number;
-  blockedUntil: number;
-}
-
-const unlockAttempts = new Map<string, AttemptRecord>();
-
 export const TransfersService = {
   async processNewTransfer(
     params: ProcessNewTransferParams
@@ -90,46 +83,12 @@ export const TransfersService = {
     email: string | null = null,
     otpCode: string | null = null
   ): Promise<string> {
-    const now = Date.now();
-    const attempt = unlockAttempts.get(accessCode);
-
-    if (attempt && attempt.blockedUntil > now) {
-      throw new Error("Demasiados intentos fallidos. Intenta más tarde.");
-    }
-
-    try {
-      const encryptedBlob = await TransfersRepository.verifyAndUnlockTransfer(
-        accessCode,
-        email,
-        otpCode,
-        pinHash
-      );
-      unlockAttempts.delete(accessCode);
-      return encryptedBlob;
-    } catch (err) {
-      const msg = (err as Error).message || "";
-      if (/INVALID_PIN/i.test(msg) || /pin incorrecto/i.test(msg)) {
-        const currentCount =
-          attempt?.blockedUntil && attempt.blockedUntil <= now
-            ? 1
-            : (attempt?.count ?? 0) + 1;
-        const blockedUntil = currentCount >= 5 ? now + 15 * 60 * 1000 : 0;
-        unlockAttempts.set(accessCode, { count: currentCount, blockedUntil });
-        if (blockedUntil > now) {
-          throw new Error("Demasiados intentos fallidos. Intenta más tarde.");
-        }
-      }
-      throw err;
-    }
-  },
-
-  async unlockPublicTransfer(
-    accessCode: string,
-    email: string | null,
-    otpCode: string | null,
-    pinHash: string
-  ): Promise<string> {
-    return this.unlockTransfer(accessCode, pinHash, email, otpCode);
+    return TransfersRepository.verifyAndUnlockTransfer(
+      accessCode,
+      email,
+      otpCode,
+      pinHash
+    );
   },
 
   async unlockAuthenticatedTransfer(
@@ -137,36 +96,10 @@ export const TransfersService = {
     userEmail: string,
     pinHash: string
   ): Promise<string> {
-    const now = Date.now();
-    const attempt = unlockAttempts.get(accessCode);
-
-    if (attempt && attempt.blockedUntil > now) {
-      throw new Error("Demasiados intentos fallidos. Intenta más tarde.");
-    }
-
-    try {
-      const encryptedBlob =
-        await TransfersRepository.unlockTransferAuthenticated(
-          accessCode,
-          userEmail,
-          pinHash
-        );
-      unlockAttempts.delete(accessCode);
-      return encryptedBlob;
-    } catch (err) {
-      const msg = (err as Error).message || "";
-      if (/INVALID_PIN/i.test(msg) || /pin incorrecto/i.test(msg)) {
-        const currentCount =
-          attempt?.blockedUntil && attempt.blockedUntil <= now
-            ? 1
-            : (attempt?.count ?? 0) + 1;
-        const blockedUntil = currentCount >= 5 ? now + 15 * 60 * 1000 : 0;
-        unlockAttempts.set(accessCode, { count: currentCount, blockedUntil });
-        if (blockedUntil > now) {
-          throw new Error("Demasiados intentos fallidos. Intenta más tarde.");
-        }
-      }
-      throw err;
-    }
+    return TransfersRepository.unlockTransferAuthenticated(
+      accessCode,
+      userEmail,
+      pinHash
+    );
   },
 };

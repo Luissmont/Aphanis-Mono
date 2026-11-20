@@ -80,8 +80,11 @@ export async function POST(
     console.error(error);
     const message = (error as Error).message || "";
 
-    if (message === "Demasiados intentos fallidos. Intenta más tarde.") {
-      return NextResponse.json({ error: message }, { status: 429 });
+    if (/TOO_MANY_ATTEMPTS|bloqueada|Demasiados intentos/i.test(message)) {
+      return NextResponse.json(
+        { error: "Demasiados intentos fallidos. Transferencia bloqueada temporalmente por 15 minutos." },
+        { status: 429 }
+      );
     }
 
     if (/GONE|NOT_FOUND|caducada|destruida|no encontrada/i.test(message)) {

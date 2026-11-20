@@ -23,12 +23,6 @@ interface TransferInfo {
   }[];
 }
 
-interface TransferWithPinHash {
-  status: string;
-  expires_at: string;
-  pin_hash: string;
-}
-
 interface RpcResult {
   is_valid: boolean;
   error_code?: string;
@@ -94,40 +88,6 @@ export const TransfersRepository = {
     }
 
     return data as TransferInfo;
-  },
-
-  async getTransferWithPinHash(accessCode: string): Promise<TransferWithPinHash> {
-    const { data, error } = await supabase
-      .from("transfers")
-      .select("status, expires_at, pin_hash")
-      .eq("access_code", accessCode)
-      .single();
-
-    if (error || !data) {
-      throw new Error("Transferencia no encontrada");
-    }
-
-    return data as TransferWithPinHash;
-  },
-
-  async executeUnlock(accessCode: string): Promise<string> {
-    const { data, error } = await supabase
-      .rpc("process_transfer_opening", {
-        p_access_code: accessCode,
-      })
-      .single();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    const result = data as RpcResult;
-
-    if (!result || !result.is_valid || !result.encrypted_blob) {
-      throw new Error("Transferencia destruida o inválida");
-    }
-
-    return result.encrypted_blob;
   },
 
   async verifyAndUnlockTransfer(
