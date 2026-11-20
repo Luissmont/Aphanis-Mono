@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { DashboardService } from "@/lib/services/dashboard.service";
 import { AuthService } from "@/lib/services/auth.service";
 
+export const dynamic = "force-dynamic";
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function GET() {

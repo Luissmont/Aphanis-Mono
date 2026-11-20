@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   DecryptedContent,
@@ -17,7 +17,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export default function DecryptPage() {
+function DecryptContent() {
   const params = useParams();
   const id = ((params?.id as string) || "").trim().toUpperCase();
 
@@ -451,5 +451,13 @@ export default function DecryptPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DecryptPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#09090B]" />}>
+      <DecryptContent />
+    </Suspense>
   );
 }
