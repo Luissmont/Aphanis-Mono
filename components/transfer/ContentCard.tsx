@@ -1,18 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
-import { Upload } from "lucide-react";
+import React, { useRef } from "react";
+import { Upload, FileText, X } from "lucide-react";
 
 interface ContentCardProps {
-  secretText?: string;
-  setSecretText?: (val: string) => void;
+  contentType: "text" | "file";
+  setContentType: (type: "text" | "file") => void;
+  secretText: string;
+  setSecretText: (val: string) => void;
+  selectedFile: File | null;
+  setSelectedFile: (file: File | null) => void;
 }
 
 export function ContentCard({
-  secretText = "",
+  contentType,
+  setContentType,
+  secretText,
   setSecretText,
+  selectedFile,
+  setSelectedFile,
 }: ContentCardProps) {
-  const [tab, setTab] = useState<"text" | "file">("text");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   return (
     <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-2 flex flex-col justify-between">
@@ -27,9 +41,9 @@ export function ContentCard({
         <div className="bg-black/60 p-1 rounded-full border border-white/5 flex gap-1">
           <button
             type="button"
-            onClick={() => setTab("text")}
+            onClick={() => setContentType("text")}
             className={`py-1 px-3.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-              tab === "text"
+              contentType === "text"
                 ? "bg-white/10 text-white shadow-sm"
                 : "bg-transparent text-zinc-400 hover:text-white"
             }`}
@@ -38,9 +52,9 @@ export function ContentCard({
           </button>
           <button
             type="button"
-            onClick={() => setTab("file")}
+            onClick={() => setContentType("file")}
             className={`py-1 px-3.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-              tab === "file"
+              contentType === "file"
                 ? "bg-white/10 text-white shadow-sm"
                 : "bg-transparent text-zinc-400 hover:text-white"
             }`}
@@ -51,19 +65,68 @@ export function ContentCard({
       </div>
 
       <div className="h-56 sm:h-64 w-full">
-        {tab === "text" ? (
+        {contentType === "text" ? (
           <textarea
             value={secretText}
-            onChange={(e) => setSecretText?.(e.target.value)}
+            onChange={(e) => setSecretText(e.target.value)}
             className="w-full h-full bg-black/50 rounded-2xl border border-white/5 p-4 text-sm text-white placeholder-zinc-500 resize-none outline-none focus:border-white/20 transition-colors"
             placeholder="Escribe o pega aquí la información confidencial..."
           />
         ) : (
-          <div className="w-full h-full bg-black/50 rounded-2xl border border-dashed border-white/10 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-white/20 transition-colors group">
-            <Upload className="w-12 h-12 text-white/90 mb-2 group-hover:scale-105 transition-transform" />
-            <span className="text-sm font-semibold text-white">
-              Subir Archivo
-            </span>
+          <div className="w-full h-full">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => {
+                if (e.target.files?.[0]) {
+                  setSelectedFile(e.target.files[0]);
+                }
+              }}
+              className="hidden"
+            />
+
+            {selectedFile ? (
+              <div className="w-full h-full bg-black/50 rounded-2xl border border-white/10 p-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                    <FileText className="w-6 h-6 text-[#CCFF00]" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-white text-sm block truncate max-w-[200px] sm:max-w-xs">
+                      {selectedFile.name}
+                    </span>
+                    <span className="text-xs text-zinc-400 mt-1 block">
+                      {formatFileSize(selectedFile.size)}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="p-2 text-zinc-400 hover:text-red-400 transition-colors cursor-pointer"
+                  title="Quitar archivo"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full h-full bg-black/50 rounded-2xl border border-dashed border-white/10 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-white/20 transition-colors group"
+              >
+                <Upload className="w-12 h-12 text-white/90 mb-2 group-hover:scale-105 transition-transform" />
+                <span className="text-sm font-semibold text-white">
+                  Subir Archivo
+                </span>
+                <span className="text-xs text-zinc-500 mt-1">
+                  Haz clic para seleccionar cualquier documento
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>

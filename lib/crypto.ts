@@ -1,4 +1,4 @@
-function bytesToBase64(bytes: Uint8Array): string {
+export function bytesToBase64(bytes: Uint8Array): string {
   let binary = "";
   const len = bytes.byteLength;
   for (let i = 0; i < len; i++) {
@@ -7,7 +7,7 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-function base64ToBytes(base64: string): Uint8Array {
+export function base64ToBytes(base64: string): Uint8Array {
   const binary = atob(base64);
   const len = binary.length;
   const bytes = new Uint8Array(len);
@@ -15,6 +15,13 @@ function base64ToBytes(base64: string): Uint8Array {
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes;
+}
+
+export async function hashPin(pin: string): Promise<string> {
+  const encoded = new TextEncoder().encode(pin);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export async function generateSecureKey(): Promise<string> {
@@ -27,11 +34,30 @@ export async function generateSecureKey(): Promise<string> {
   return bytesToBase64(new Uint8Array(raw));
 }
 
-export async function importKeyFromPin(pinBase64: string): Promise<CryptoKey> {
-  const bytes = base64ToBytes(pinBase64);
+export async function importKeyFromPin(pin: string): Promise<CryptoKey> {
+  let rawKey: Uint8Array;
+  try {
+    const bytes = base64ToBytes(pin);
+    if (bytes.length === 32) {
+      rawKey = bytes;
+    } else {
+      const hashBuffer = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(pin)
+      );
+      rawKey = new Uint8Array(hashBuffer);
+    }
+  } catch {
+    const hashBuffer = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(pin)
+    );
+    rawKey = new Uint8Array(hashBuffer);
+  }
+
   return crypto.subtle.importKey(
     "raw",
-    bytes as unknown as BufferSource,
+    rawKey as unknown as BufferSource,
     { name: "AES-GCM" },
     false,
     ["encrypt", "decrypt"]
