@@ -28,8 +28,8 @@ interface TransferWithPinHash {
 
 interface RpcResult {
   is_valid: boolean;
-  transfer_id: string;
-  updated_status?: string;
+  transfer_id?: string;
+  encrypted_blob?: string;
 }
 
 export const TransfersRepository = {
@@ -67,9 +67,7 @@ export const TransfersRepository = {
 
   async getTransferByCode(accessCode: string): Promise<TransferInfo> {
     const { data, error } = await supabase
-      .from("transfers")
-      .select("status, expires_at, transfer_contents(content_type, metadata)")
-      .eq("access_code", accessCode)
+      .rpc("get_public_transfer_info", { p_access_code: accessCode })
       .single();
 
     if (error || !data) {
@@ -94,9 +92,11 @@ export const TransfersRepository = {
   },
 
   async executeUnlock(accessCode: string): Promise<string> {
-    const { data, error } = await supabase.rpc("process_transfer_opening", {
-      p_access_code: accessCode,
-    }).single();
+    const { data, error } = await supabase
+      .rpc("process_transfer_opening", {
+        p_access_code: accessCode,
+      })
+      .single();
 
     if (error) {
       throw new Error(error.message);
@@ -104,26 +104,10 @@ export const TransfersRepository = {
 
     const result = data as RpcResult;
 
-    if (!result || !result.is_valid) {
+    if (!result || !result.is_valid || !result.encrypted_blob) {
       throw new Error("Transferencia destruida o inválida");
     }
 
-    const { data: content, error: contentError } = await supabase
-      .from("transfer_contents")
-      .select("encrypted_blob")
-      .eq("transfer_id", result.transfer_id)
-      .single();
-
-    if (contentError || !content) {
-      throw new Error("Contenido no encontrado");
-    }
-
-    if (result.updated_status === "destroyed") {
-      await supabase.rpc("purge_transfer_content", {
-        p_transfer_id: result.transfer_id,
-      });
-    }
-
-    return content.encrypted_blob as string;
+    return result.encrypted_blob;
   },
 };

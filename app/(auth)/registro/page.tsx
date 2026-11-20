@@ -16,13 +16,52 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
 
+  const getPasswordStrength = (pwd: string) => {
+    if (!pwd) return { score: 0, label: "", color: "", text: "" };
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9\W_]/.test(pwd)) score++;
+
+    if (score === 1) {
+      return {
+        score: 1,
+        label: "Débil",
+        color: "bg-red-500",
+        text: "text-red-400",
+      };
+    }
+    if (score === 2) {
+      return {
+        score: 2,
+        label: "Media",
+        color: "bg-amber-400",
+        text: "text-amber-400",
+      };
+    }
+    return {
+      score: 3,
+      label: "Fuerte",
+      color: "bg-[#CCFF00]",
+      text: "text-[#CCFF00]",
+    };
+  };
+
+  const strength = getPasswordStrength(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setInfoMessage("");
 
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    if (
+      password.length < 8 ||
+      !/[A-Z]/.test(password) ||
+      !/[0-9\W_]/.test(password)
+    ) {
+      setError(
+        "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número o símbolo."
+      );
       return;
     }
 
@@ -34,12 +73,18 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        if (/already registered|already exists/i.test(signUpError.message)) {
+          setError(
+            "No se pudo completar el registro con este correo. Si ya tienes cuenta, inicia sesión."
+          );
+        } else {
+          setError(signUpError.message);
+        }
         return;
       }
 
@@ -90,8 +135,35 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="bg-white text-black rounded-full px-5 py-3 w-full outline-none font-medium text-sm placeholder-zinc-400"
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Mínimo 8 caracteres, 1 mayúscula y 1 número/símbolo"
           />
+          {password.length > 0 && (
+            <div className="mt-2 px-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] text-zinc-400">Fortaleza:</span>
+                <span className={`text-[11px] font-bold ${strength.text}`}>
+                  {strength.label}
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden flex gap-1">
+                <div
+                  className={`h-full flex-1 rounded-full ${
+                    strength.score >= 1 ? strength.color : "bg-transparent"
+                  }`}
+                />
+                <div
+                  className={`h-full flex-1 rounded-full ${
+                    strength.score >= 2 ? strength.color : "bg-transparent"
+                  }`}
+                />
+                <div
+                  className={`h-full flex-1 rounded-full ${
+                    strength.score >= 3 ? strength.color : "bg-transparent"
+                  }`}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div>
@@ -128,13 +200,7 @@ export default function RegisterPage() {
               className="w-4 h-4 rounded accent-[#CCFF00] cursor-pointer"
             />
             <span className="text-xs text-white">
-              Estoy de acuerdo con los{" "}
-              <Link
-                href="#"
-                className="text-[#CCFF00] font-bold hover:underline"
-              >
-                Términos y Condiciones
-              </Link>
+              Acepto los Términos y Condiciones del servicio
             </span>
           </label>
         </div>

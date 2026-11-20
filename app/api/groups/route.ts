@@ -62,7 +62,9 @@ export async function POST(request: Request) {
         );
       }
 
-      sanitizedEmails = emails.map((email: string) => email.trim());
+      sanitizedEmails = Array.from(
+        new Set(emails.map((email: string) => email.trim().toLowerCase()))
+      );
     }
 
     const newGroup = await DashboardService.createGroup(

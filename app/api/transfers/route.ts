@@ -91,7 +91,9 @@ export async function POST(request: Request) {
         );
       }
 
-      sanitizedRecipients = recipients.map((email: string) => email.trim());
+      sanitizedRecipients = Array.from(
+        new Set(recipients.map((email: string) => email.trim().toLowerCase()))
+      );
     }
 
     const accessCode = await TransfersService.processNewTransfer({

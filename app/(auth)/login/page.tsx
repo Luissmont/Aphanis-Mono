@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
@@ -79,22 +79,6 @@ export default function LoginPage() {
             {error}
           </div>
         )}
-
-        <div className="flex justify-between items-center pt-1">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              className="w-4 h-4 rounded accent-[#CCFF00] cursor-pointer"
-            />
-            <span className="text-xs text-white">Recordarme</span>
-          </label>
-          <Link
-            href="#"
-            className="text-xs font-bold text-[#CCFF00] hover:underline"
-          >
-            Olvidé mi contraseña
-          </Link>
-        </div>
 
         <button
           type="submit"

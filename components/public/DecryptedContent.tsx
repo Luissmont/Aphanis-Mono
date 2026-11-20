@@ -35,18 +35,27 @@ export function DecryptedContent({
   const handleDownloadFile = () => {
     if (!decryptedFile) return;
     try {
+      const sanitizedName = (decryptedFile.name || "archivo_descifrado").replace(
+        /[^a-zA-Z0-9._-]/g,
+        "_"
+      );
+      const isDangerousExt = /\.(svg|html|htm|js|xml)$/i.test(sanitizedName);
+      const mimeType = isDangerousExt
+        ? "application/octet-stream"
+        : decryptedFile.type || "application/octet-stream";
+
       const bytes = base64ToBytes(decryptedFile.dataBase64);
       const blob = new Blob([bytes as unknown as BlobPart], {
-        type: decryptedFile.type || "application/octet-stream",
+        type: mimeType,
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = decryptedFile.name || "archivo_descifrado";
+      link.download = sanitizedName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch (error) {
       console.error(error);
     }

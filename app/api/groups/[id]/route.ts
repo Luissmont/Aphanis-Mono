@@ -47,7 +47,9 @@ export async function PUT(
         );
       }
 
-      sanitizedEmails = emails.map((email: string) => email.trim());
+      sanitizedEmails = Array.from(
+        new Set(emails.map((email: string) => email.trim().toLowerCase()))
+      );
     }
 
     const updatedGroup = await DashboardService.updateGroup(

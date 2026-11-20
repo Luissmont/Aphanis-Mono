@@ -56,10 +56,12 @@ export default function Home() {
     const group = groups.find((g) => g.id === groupId);
     if (!group || !group.group_members) return;
 
-    const newEmails = group.group_members.map((m) => m.email);
+    const newEmails = group.group_members.map((m) =>
+      m.email.trim().toLowerCase()
+    );
     const existing = recipientsText
       .split(",")
-      .map((e) => e.trim())
+      .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
 
     const combined = Array.from(new Set([...existing, ...newEmails]));
@@ -111,10 +113,14 @@ export default function Home() {
       const encryptedBlob = await encryptData(payloadBytes, key);
       const pinHash = await hashPin(pin);
 
-      const recipients = recipientsText
-        .split(",")
-        .map((e) => e.trim())
-        .filter(Boolean);
+      const recipients = Array.from(
+        new Set(
+          recipientsText
+            .split(",")
+            .map((e) => e.trim().toLowerCase())
+            .filter(Boolean)
+        )
+      );
 
       const response = await fetch("/api/transfers", {
         method: "POST",

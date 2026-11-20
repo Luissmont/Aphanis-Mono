@@ -67,10 +67,14 @@ export default function GruposPage() {
       return;
     }
 
-    const emails = emailsText
-      .split(",")
-      .map((em) => em.trim())
-      .filter(Boolean);
+    const emails = Array.from(
+      new Set(
+        emailsText
+          .split(",")
+          .map((em) => em.trim().toLowerCase())
+          .filter(Boolean)
+      )
+    );
 
     try {
       setSubmitting(true);
