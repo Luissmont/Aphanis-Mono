@@ -1,9 +1,68 @@
 "use client";
 
 import React, { useState } from "react";
+import { Copy, Check, Download, FileText, Lock } from "lucide-react";
+import { base64ToBytes } from "@/lib/crypto";
 
-export function DecryptedContent() {
-  const [tab, setTab] = useState<"text" | "file">("text");
+export interface DecryptedFile {
+  name: string;
+  type: string;
+  dataBase64: string;
+}
+
+interface DecryptedContentProps {
+  decryptedText?: string | null;
+  decryptedFile?: DecryptedFile | null;
+  expiresAt?: string | null;
+  onReset?: () => void;
+}
+
+export function DecryptedContent({
+  decryptedText,
+  decryptedFile,
+  expiresAt,
+  onReset,
+}: DecryptedContentProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyText = () => {
+    if (!decryptedText) return;
+    navigator.clipboard.writeText(decryptedText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadFile = () => {
+    if (!decryptedFile) return;
+    try {
+      const bytes = base64ToBytes(decryptedFile.dataBase64);
+      const blob = new Blob([bytes as unknown as BlobPart], {
+        type: decryptedFile.type || "application/octet-stream",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = decryptedFile.name || "archivo_descifrado";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const formatExpires = (dateStr: string): string => {
+    try {
+      return new Date(dateStr).toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    } catch {
+      return "23:41:09";
+    }
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -23,8 +82,11 @@ export function DecryptedContent() {
           </div>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-full px-6 py-2.5 text-white font-bold text-lg tracking-wider shrink-0 self-start sm:self-auto select-none">
-          23:41:09
+        <div className="bg-white/5 border border-white/10 rounded-full px-6 py-2.5 text-white font-bold text-sm sm:text-base tracking-wider shrink-0 self-start sm:self-auto select-none flex items-center gap-2">
+          <Lock className="w-4 h-4 text-[#CCFF00]" />
+          <span>
+            {expiresAt ? `Expira: ${formatExpires(expiresAt)}` : "DESCIFRADO"}
+          </span>
         </div>
       </header>
 
@@ -39,67 +101,74 @@ export function DecryptedContent() {
             </h2>
           </div>
 
-          <div className="bg-black/60 p-1 rounded-full border border-white/5 flex gap-1 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setTab("text")}
-              className={`py-1.5 px-4 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                tab === "text"
-                  ? "bg-white/10 text-white shadow-sm"
-                  : "bg-transparent text-zinc-400 hover:text-white"
-              }`}
-            >
-              Texto plano
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("file")}
-              className={`py-1.5 px-4 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                tab === "file"
-                  ? "bg-white/10 text-white shadow-sm"
-                  : "bg-transparent text-zinc-400 hover:text-white"
-              }`}
-            >
-              Archivo
-            </button>
+          <div className="flex items-center gap-2">
+            {decryptedText && (
+              <button
+                type="button"
+                onClick={handleCopyText}
+                className="bg-white/10 hover:bg-white/15 text-white text-xs font-semibold px-4 py-2 rounded-full transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#CCFF00]" />
+                    <span className="text-[#CCFF00]">¡Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copiar texto</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {onReset && (
+              <button
+                type="button"
+                onClick={onReset}
+                className="bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-xs font-semibold px-4 py-2 rounded-full transition-colors cursor-pointer"
+              >
+                Abrir otro paquete
+              </button>
+            )}
           </div>
         </div>
 
-        {tab === "text" ? (
-          <div className="bg-black/60 rounded-2xl p-6 min-h-[200px] text-white font-medium text-sm sm:text-base leading-relaxed border border-white/5">
-            Hola, este es el mensaje cifrado que tengo .............
-          </div>
-        ) : (
-          <div className="bg-black/60 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border border-white/5">
+        {decryptedFile ? (
+          <div className="bg-black/60 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border border-white/5">
             <div className="flex items-center gap-4">
-              <div
-                className="w-16 h-16 bg-zinc-600 rounded-2xl shrink-0"
-                aria-hidden="true"
-              />
+              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                <FileText className="w-8 h-8 text-[#CCFF00]" />
+              </div>
               <div>
-                <span className="font-bold text-white text-base block">
-                  informe_auditoria_2025.pdf
+                <span className="font-bold text-white text-base sm:text-lg block truncate max-w-[220px] sm:max-w-md">
+                  {decryptedFile.name}
                 </span>
                 <span className="text-xs text-zinc-400 mt-1 block">
-                  PDF | 12,4 MB
+                  {decryptedFile.type || "Documento binario descifrado"}
                 </span>
               </div>
             </div>
 
             <button
               type="button"
-              className="bg-[#CCFF00] text-black font-bold px-6 py-3 rounded-full hover:scale-105 active:scale-95 transition-transform text-sm shrink-0 cursor-pointer shadow-[0_0_15px_rgba(204,255,0,0.25)]"
+              onClick={handleDownloadFile}
+              className="bg-[#CCFF00] text-black font-bold px-7 py-3.5 rounded-full hover:scale-105 active:scale-95 transition-transform text-sm shrink-0 cursor-pointer shadow-[0_0_20px_rgba(204,255,0,0.25)] flex items-center justify-center gap-2"
             >
-              Descargar archivo
+              <Download className="w-4 h-4" />
+              <span>Descargar archivo</span>
             </button>
+          </div>
+        ) : (
+          <div className="bg-black/60 rounded-2xl p-6 min-h-[220px] text-white font-mono text-sm sm:text-base leading-relaxed border border-white/5 whitespace-pre-wrap break-words select-text">
+            {decryptedText || "No hay contenido disponible"}
           </div>
         )}
 
         <span className="text-xs text-zinc-500 mt-6 block select-none">
-          Comparte el PIN por un canal distinto al enlace
+          El contenido ha sido descifrado en memoria y no queda almacenado en ningún servidor.
         </span>
       </div>
     </div>
   );
 }
-
