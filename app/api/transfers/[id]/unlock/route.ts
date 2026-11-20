@@ -6,7 +6,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const rawId = (await params).id;
+    const id = (rawId || "").trim().toUpperCase();
     const body = await request.json();
     const pinHash: unknown = body.pin_hash;
 

@@ -11,7 +11,7 @@ import { ShieldAlert, KeyRound, Loader2, Lock } from "lucide-react";
 
 export default function DecryptPage() {
   const params = useParams();
-  const id = (params?.id as string) || "";
+  const id = ((params?.id as string) || "").trim().toUpperCase();
 
   const [checking, setChecking] = useState(true);
   const [isGone, setIsGone] = useState(false);

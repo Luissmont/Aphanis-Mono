@@ -45,7 +45,11 @@ export const TransfersService = {
     });
 
     if (params.recipients && params.recipients.length > 0) {
-      await sendTransferEmails(params.recipients, accessCode);
+      try {
+        await sendTransferEmails(params.recipients, accessCode);
+      } catch (emailError) {
+        console.error("Error enviando notificaciones:", emailError);
+      }
     }
 
     return accessCode;

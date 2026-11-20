@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Upload, FileText, X } from "lucide-react";
 
 interface ContentCardProps {
@@ -21,11 +21,17 @@ export function ContentCard({
   setSelectedFile,
 }: ContentCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileError, setFileError] = useState("");
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleTabChange = (type: "text" | "file") => {
+    setFileError("");
+    setContentType(type);
   };
 
   return (
@@ -41,7 +47,7 @@ export function ContentCard({
         <div className="bg-black/60 p-1 rounded-full border border-white/5 flex gap-1">
           <button
             type="button"
-            onClick={() => setContentType("text")}
+            onClick={() => handleTabChange("text")}
             className={`py-1 px-3.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               contentType === "text"
                 ? "bg-white/10 text-white shadow-sm"
@@ -52,7 +58,7 @@ export function ContentCard({
           </button>
           <button
             type="button"
-            onClick={() => setContentType("file")}
+            onClick={() => handleTabChange("file")}
             className={`py-1 px-3.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               contentType === "file"
                 ? "bg-white/10 text-white shadow-sm"
@@ -73,14 +79,23 @@ export function ContentCard({
             placeholder="Escribe o pega aquí la información confidencial..."
           />
         ) : (
-          <div className="w-full h-full">
+          <div className="w-full h-full flex flex-col justify-between">
             <input
               type="file"
               ref={fileInputRef}
               onChange={(e) => {
-                if (e.target.files?.[0]) {
-                  setSelectedFile(e.target.files[0]);
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                if (file.size > 10 * 1024 * 1024) {
+                  setFileError("El archivo excede el límite máximo permitido de 10 MB.");
+                  setSelectedFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                  return;
                 }
+
+                setFileError("");
+                setSelectedFile(file);
               }}
               className="hidden"
             />
@@ -105,6 +120,7 @@ export function ContentCard({
                   type="button"
                   onClick={() => {
                     setSelectedFile(null);
+                    setFileError("");
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                   className="p-2 text-zinc-400 hover:text-red-400 transition-colors cursor-pointer"
@@ -115,7 +131,10 @@ export function ContentCard({
               </div>
             ) : (
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  setFileError("");
+                  fileInputRef.current?.click();
+                }}
                 className="w-full h-full bg-black/50 rounded-2xl border border-dashed border-white/10 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-white/20 transition-colors group"
               >
                 <Upload className="w-12 h-12 text-white/90 mb-2 group-hover:scale-105 transition-transform" />
@@ -123,8 +142,14 @@ export function ContentCard({
                   Subir Archivo
                 </span>
                 <span className="text-xs text-zinc-500 mt-1">
-                  Haz clic para seleccionar cualquier documento
+                  Máximo 10 MB. Haz clic para seleccionar cualquier documento
                 </span>
+              </div>
+            )}
+
+            {fileError && (
+              <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-semibold">
+                {fileError}
               </div>
             )}
           </div>

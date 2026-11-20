@@ -14,10 +14,12 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setInfoMessage("");
 
     if (password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres.");
@@ -31,13 +33,20 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (signUpError) {
         setError(signUpError.message);
+        return;
+      }
+
+      if (!data.session) {
+        setInfoMessage(
+          "Cuenta creada. Revisa tu correo para confirmar tu cuenta antes de iniciar sesión."
+        );
         return;
       }
 
@@ -102,6 +111,12 @@ export default function RegisterPage() {
         {error && (
           <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-semibold">
             {error}
+          </div>
+        )}
+
+        {infoMessage && (
+          <div className="p-3 bg-[#CCFF00]/10 border border-[#CCFF00]/20 rounded-xl text-[#CCFF00] text-xs font-semibold leading-relaxed">
+            {infoMessage}
           </div>
         )}
 
