@@ -21,6 +21,11 @@ export const DashboardService = {
   },
 
   async updateGroup(userId: string, groupId: string, name: string, emails: string[]) {
+    const existingGroup = await DashboardRepository.getGroupByIdAndUser(userId, groupId);
+    if (!existingGroup) {
+      throw new Error("Grupo no encontrado o no autorizado");
+    }
+
     const group = await DashboardRepository.updateGroup(userId, groupId, name);
 
     await DashboardRepository.deleteGroupMembers(groupId);
@@ -34,6 +39,11 @@ export const DashboardService = {
   },
 
   async deleteGroup(userId: string, groupId: string): Promise<void> {
+    const existingGroup = await DashboardRepository.getGroupByIdAndUser(userId, groupId);
+    if (!existingGroup) {
+      throw new Error("Grupo no encontrado o no autorizado");
+    }
+
     await DashboardRepository.deleteGroupMembers(groupId);
     await DashboardRepository.deleteGroup(userId, groupId);
   },

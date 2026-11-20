@@ -84,6 +84,11 @@ export default function Home() {
       return;
     }
 
+    if (pin.trim().length < 6) {
+      setError("El PIN debe tener al menos 6 caracteres para garantizar la seguridad.");
+      return;
+    }
+
     try {
       setIsProcessing(true);
 

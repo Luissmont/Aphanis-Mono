@@ -10,10 +10,16 @@ export async function GET(
     const transfer = await TransfersService.getTransferInfo(id);
     return NextResponse.json(transfer);
   } catch (error) {
+    console.error(error);
     const message = (error as Error).message;
+
     if (message === "Transferencia caducada") {
       return NextResponse.json({ error: message }, { status: 410 });
     }
-    return NextResponse.json({ error: message }, { status: 404 });
+
+    return NextResponse.json(
+      { error: "Transferencia no encontrada" },
+      { status: 404 }
+    );
   }
 }

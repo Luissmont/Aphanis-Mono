@@ -49,6 +49,23 @@ export const DashboardRepository = {
     return (data ?? []) as GroupRecord[];
   },
 
+  async getGroupByIdAndUser(userId: string, groupId: string): Promise<GroupRecord | null> {
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from("groups")
+      .select("id, name, created_at, group_members(email)")
+      .eq("id", groupId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data as GroupRecord;
+  },
+
   async insertGroup(userId: string, name: string): Promise<{ id: string; name: string; created_at: string }> {
     const supabase = await createSupabaseServerClient();
 

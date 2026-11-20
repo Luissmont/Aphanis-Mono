@@ -14,11 +14,16 @@ interface CreateTransferData {
 interface TransferInfo {
   status: string;
   expires_at: string;
-  pin_hash: string;
   transfer_contents: {
     content_type: string;
     metadata: Record<string, unknown> | null;
   }[];
+}
+
+interface TransferWithPinHash {
+  status: string;
+  expires_at: string;
+  pin_hash: string;
 }
 
 interface RpcResult {
@@ -62,7 +67,7 @@ export const TransfersRepository = {
   async getTransferByCode(accessCode: string): Promise<TransferInfo> {
     const { data, error } = await supabase
       .from("transfers")
-      .select("status, expires_at, pin_hash, transfer_contents(content_type, metadata)")
+      .select("status, expires_at, transfer_contents(content_type, metadata)")
       .eq("access_code", accessCode)
       .single();
 
@@ -71,6 +76,20 @@ export const TransfersRepository = {
     }
 
     return data as TransferInfo;
+  },
+
+  async getTransferWithPinHash(accessCode: string): Promise<TransferWithPinHash> {
+    const { data, error } = await supabase
+      .from("transfers")
+      .select("status, expires_at, pin_hash")
+      .eq("access_code", accessCode)
+      .single();
+
+    if (error || !data) {
+      throw new Error("Transferencia no encontrada");
+    }
+
+    return data as TransferWithPinHash;
   },
 
   async executeUnlock(accessCode: string): Promise<string> {
