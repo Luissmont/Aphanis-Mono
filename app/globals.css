@@ -27,4 +27,8 @@
   html {
     background-color: #000000;
   }
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
 }

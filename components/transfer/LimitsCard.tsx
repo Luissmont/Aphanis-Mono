@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { ChevronDown } from "lucide-react";
 
 interface LimitsCardProps {
   expiresInHours: number;
@@ -10,12 +9,36 @@ interface LimitsCardProps {
   setMaxOpens: (opens: number) => void;
 }
 
+const HOUR_PRESETS = [
+  { label: "1h", value: 1 },
+  { label: "24h", value: 24 },
+  { label: "72h", value: 72 },
+  { label: "7d", value: 168 },
+];
+
+const OPEN_PRESETS = [
+  { label: "1", value: 1 },
+  { label: "3", value: 3 },
+  { label: "5", value: 5 },
+  { label: "10", value: 10 },
+];
+
 export function LimitsCard({
   expiresInHours,
   setExpiresInHours,
   maxOpens,
   setMaxOpens,
 }: LimitsCardProps) {
+  const handleHoursChange = (val: number) => {
+    const clamped = Math.max(1, Math.min(168, Math.round(val || 1)));
+    setExpiresInHours(clamped);
+  };
+
+  const handleOpensChange = (val: number) => {
+    const clamped = Math.max(1, Math.min(20, Math.round(val || 1)));
+    setMaxOpens(clamped);
+  };
+
   return (
     <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-1 flex flex-col justify-between">
       <div>
@@ -24,57 +47,83 @@ export function LimitsCard({
           <h2 className="text-base sm:text-lg font-bold text-white">Límites</h2>
         </div>
 
-        <div className="mb-4">
-          <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
-            Tiempo límite
+        <div className="mb-5">
+          <label className="text-xs text-zinc-400 block mb-2 font-medium">
+            Tiempo límite (horas)
           </label>
-          <div className="relative">
-            <select
+          <div className="grid grid-cols-4 gap-1.5 mb-2">
+            {HOUR_PRESETS.map((preset) => {
+              const isSelected = expiresInHours === preset.value;
+              return (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => setExpiresInHours(preset.value)}
+                  className={`py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-[#CCFF00] text-black shadow-[0_0_10px_rgba(204,255,0,0.25)]"
+                      : "bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={168}
               value={expiresInHours}
-              onChange={(e) => setExpiresInHours(Number(e.target.value))}
-              className="w-full bg-black/50 border border-white/5 rounded-full py-2.5 px-4 pr-10 text-sm text-white font-medium cursor-pointer hover:border-white/10 transition-colors appearance-none outline-none"
-            >
-              <option value={1} className="bg-[#1C1C1E] text-white">
-                1 hora
-              </option>
-              <option value={24} className="bg-[#1C1C1E] text-white">
-                24 horas
-              </option>
-              <option value={72} className="bg-[#1C1C1E] text-white">
-                72 horas
-              </option>
-              <option value={168} className="bg-[#1C1C1E] text-white">
-                7 días (168 horas)
-              </option>
-            </select>
-            <ChevronDown className="w-4 h-4 text-zinc-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              onChange={(e) => handleHoursChange(Number(e.target.value))}
+              className="w-full bg-black/50 border border-white/5 rounded-full py-2 px-4 text-xs sm:text-sm text-white font-medium outline-none focus:border-[#CCFF00]/50 transition-colors"
+              placeholder="1 - 168 horas"
+            />
+            <span className="text-xs text-zinc-500 shrink-0 font-medium">
+              horas
+            </span>
           </div>
         </div>
 
         <div>
-          <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
+          <label className="text-xs text-zinc-400 block mb-2 font-medium">
             Número de aperturas
           </label>
-          <div className="relative">
-            <select
+          <div className="grid grid-cols-4 gap-1.5 mb-2">
+            {OPEN_PRESETS.map((preset) => {
+              const isSelected = maxOpens === preset.value;
+              return (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => setMaxOpens(preset.value)}
+                  className={`py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-[#CCFF00] text-black shadow-[0_0_10px_rgba(204,255,0,0.25)]"
+                      : "bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={20}
               value={maxOpens}
-              onChange={(e) => setMaxOpens(Number(e.target.value))}
-              className="w-full bg-black/50 border border-white/5 rounded-full py-2.5 px-4 pr-10 text-sm text-white font-medium cursor-pointer hover:border-white/10 transition-colors appearance-none outline-none"
-            >
-              <option value={1} className="bg-[#1C1C1E] text-white">
-                1 apertura
-              </option>
-              <option value={3} className="bg-[#1C1C1E] text-white">
-                3 aperturas
-              </option>
-              <option value={5} className="bg-[#1C1C1E] text-white">
-                5 aperturas
-              </option>
-              <option value={10} className="bg-[#1C1C1E] text-white">
-                10 aperturas
-              </option>
-            </select>
-            <ChevronDown className="w-4 h-4 text-zinc-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              onChange={(e) => handleOpensChange(Number(e.target.value))}
+              className="w-full bg-black/50 border border-white/5 rounded-full py-2 px-4 text-xs sm:text-sm text-white font-medium outline-none focus:border-[#CCFF00]/50 transition-colors"
+              placeholder="1 - 20 aperturas"
+            />
+            <span className="text-xs text-zinc-500 shrink-0 font-medium">
+              aperturas
+            </span>
           </div>
         </div>
       </div>

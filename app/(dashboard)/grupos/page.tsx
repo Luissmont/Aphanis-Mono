@@ -21,7 +21,7 @@ export default function GruposPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<GroupItem | null>(null);
   const [name, setName] = useState("");
-  const [emailsText, setEmailsText] = useState("");
+  const [emailsList, setEmailsList] = useState<string[]>([""]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -47,7 +47,7 @@ export default function GruposPage() {
   const handleOpenCreateModal = () => {
     setEditingGroup(null);
     setName("");
-    setEmailsText("");
+    setEmailsList([""]);
     setError("");
     setIsModalOpen(true);
   };
@@ -55,9 +55,30 @@ export default function GruposPage() {
   const handleOpenEditModal = (group: GroupItem) => {
     setEditingGroup(group);
     setName(group.name);
-    setEmailsText((group.group_members ?? []).map((m) => m.email).join(", "));
+    const existing = (group.group_members ?? []).map((m) => m.email);
+    setEmailsList(existing.length > 0 ? existing : [""]);
     setError("");
     setIsModalOpen(true);
+  };
+
+  const handleEmailChange = (index: number, val: string) => {
+    const updated = [...emailsList];
+    updated[index] = val;
+    setEmailsList(updated);
+  };
+
+  const handleAddEmail = () => {
+    if (emailsList.length >= 30) return;
+    setEmailsList([...emailsList, ""]);
+  };
+
+  const handleRemoveEmail = (index: number) => {
+    if (emailsList.length === 1) {
+      setEmailsList([""]);
+      return;
+    }
+    const updated = emailsList.filter((_, i) => i !== index);
+    setEmailsList(updated);
   };
 
   const handleSaveGroup = async (e: React.FormEvent) => {
@@ -67,14 +88,31 @@ export default function GruposPage() {
       return;
     }
 
-    const emails = Array.from(
+    const cleanEmails = Array.from(
       new Set(
-        emailsText
-          .split(",")
+        emailsList
           .map((em) => em.trim().toLowerCase())
           .filter(Boolean)
       )
-    );
+    ).sort();
+
+    if (editingGroup) {
+      const originalEmails = Array.from(
+        new Set(
+          (editingGroup.group_members ?? []).map((m) =>
+            m.email.trim().toLowerCase()
+          )
+        )
+      ).sort();
+
+      if (
+        name.trim() === editingGroup.name.trim() &&
+        JSON.stringify(cleanEmails) === JSON.stringify(originalEmails)
+      ) {
+        setIsModalOpen(false);
+        return;
+      }
+    }
 
     try {
       setSubmitting(true);
@@ -88,7 +126,7 @@ export default function GruposPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, emails }),
+        body: JSON.stringify({ name: name.trim(), emails: cleanEmails }),
       });
 
       if (!res.ok) {
@@ -143,7 +181,7 @@ export default function GruposPage() {
               Mis grupos
             </h1>
             <p className="text-zinc-400 mt-2 text-sm sm:text-base">
-              Crea y administra listas de correos para tus envíos frecuentes.
+              Crea y administra listas de correos autorizados para tus envíos.
             </p>
           </div>
         </div>
@@ -169,7 +207,7 @@ export default function GruposPage() {
           </div>
           <h2 className="text-lg font-bold text-white">No tienes grupos aún</h2>
           <p className="text-sm text-zinc-400 mt-1 max-w-sm">
-            Crea tu primer grupo para enviar paquetes cifrados a múltiples
+            Crea tu primer grupo para autorizar destinatarios a múltiples
             personas rápidamente.
           </p>
           <button
@@ -283,19 +321,41 @@ export default function GruposPage() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider block mb-2">
-                  Correos electrónicos
-                </label>
-                <textarea
-                  value={emailsText}
-                  onChange={(e) => setEmailsText(e.target.value)}
-                  placeholder="Ingresa correos separados por comas (ej. ana@empresa.com, luis@empresa.com)"
-                  rows={4}
-                  className="w-full bg-black/50 border border-white/10 rounded-2xl p-4 text-sm text-white placeholder-zinc-500 outline-none focus:border-[#CCFF00]/50 resize-none transition-colors"
-                />
-                <span className="text-[11px] text-zinc-500 mt-1 block">
-                  Separa múltiples correos con comas.
-                </span>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                    Correos de miembros ({emailsList.filter((e) => e.trim()).length}/30)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddEmail}
+                    className="text-xs font-bold text-[#CCFF00] hover:scale-105 transition-transform flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Agregar</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-2 max-h-52 overflow-y-auto pr-1">
+                  {emailsList.map((em, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={em}
+                        onChange={(e) => handleEmailChange(idx, e.target.value)}
+                        placeholder="ejemplo@empresa.com"
+                        className="w-full bg-black/50 border border-white/10 rounded-full py-2.5 px-4 text-xs sm:text-sm text-white placeholder-zinc-500 outline-none focus:border-[#CCFF00]/50 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveEmail(idx)}
+                        className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer shrink-0"
+                        title="Quitar correo"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {error && (

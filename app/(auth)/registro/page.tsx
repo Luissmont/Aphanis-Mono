@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -12,6 +13,10 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
@@ -70,6 +75,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!acceptedTerms) {
+      setError("Debes aceptar los Términos y Condiciones para continuar.");
+      return;
+    }
+
     try {
       setLoading(true);
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -105,7 +115,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full max-w-sm flex flex-col gap-6">
+    <div className="w-full max-w-sm flex flex-col gap-6 transition-all duration-300">
       <h1 className="font-sans text-4xl uppercase text-[#CCFF00] tracking-wide font-black">
         CREA TU CUENTA
       </h1>
@@ -120,7 +130,7 @@ export default function RegisterPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-white text-black rounded-full px-5 py-3 w-full outline-none font-medium text-sm placeholder-zinc-400"
+            className="bg-white text-black rounded-full px-5 py-3 w-full outline-none font-medium text-sm placeholder-zinc-400 transition-all duration-200 focus:ring-2 focus:ring-[#CCFF00]"
             placeholder="tu@correo.com"
           />
         </div>
@@ -129,14 +139,29 @@ export default function RegisterPage() {
           <label className="text-sm font-bold text-white mb-2 block">
             Escribe tu contraseña
           </label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="bg-white text-black rounded-full px-5 py-3 w-full outline-none font-medium text-sm placeholder-zinc-400"
-            placeholder="Mínimo 8 caracteres, 1 mayúscula y 1 número/símbolo"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="bg-white text-black rounded-full pl-5 pr-12 py-3 w-full outline-none font-medium text-sm placeholder-zinc-400 transition-all duration-200 focus:ring-2 focus:ring-[#CCFF00]"
+              placeholder="Mínimo 8 caracteres, 1 mayúscula y 1 número/símbolo"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-black transition-colors cursor-pointer p-1"
+              title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+
           {password.length > 0 && (
             <div className="mt-2 px-1">
               <div className="flex items-center justify-between mb-1">
@@ -170,24 +195,38 @@ export default function RegisterPage() {
           <label className="text-sm font-bold text-white mb-2 block">
             Confirma tu contraseña
           </label>
-          <input
-            type="password"
-            required
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="bg-white text-black rounded-full px-5 py-3 w-full outline-none font-medium text-sm placeholder-zinc-400"
-            placeholder="Repite tu contraseña"
-          />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="bg-white text-black rounded-full pl-5 pr-12 py-3 w-full outline-none font-medium text-sm placeholder-zinc-400 transition-all duration-200 focus:ring-2 focus:ring-[#CCFF00]"
+              placeholder="Repite tu contraseña"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-black transition-colors cursor-pointer p-1"
+              title={showConfirmPassword ? "Ocultar contraseña" : "Ver contraseña"}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-semibold">
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-semibold animate-in fade-in duration-300">
             {error}
           </div>
         )}
 
         {infoMessage && (
-          <div className="p-3 bg-[#CCFF00]/10 border border-[#CCFF00]/20 rounded-xl text-[#CCFF00] text-xs font-semibold leading-relaxed">
+          <div className="p-3 bg-[#CCFF00]/10 border border-[#CCFF00]/20 rounded-xl text-[#CCFF00] text-xs font-semibold leading-relaxed animate-in fade-in duration-300">
             {infoMessage}
           </div>
         )}
@@ -196,7 +235,8 @@ export default function RegisterPage() {
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
-              required
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
               className="w-4 h-4 rounded accent-[#CCFF00] cursor-pointer"
             />
             <span className="text-xs text-white">
@@ -208,7 +248,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#CCFF00] text-black font-bold text-lg py-3 rounded-full hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-transform uppercase cursor-pointer mt-2"
+          className="w-full bg-[#CCFF00] text-black font-bold text-lg py-3 rounded-full hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300 uppercase cursor-pointer mt-2 shadow-[0_0_15px_rgba(204,255,0,0.25)]"
         >
           {loading ? "CREANDO CUENTA..." : "CREAR CUENTA"}
         </button>

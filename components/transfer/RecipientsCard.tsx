@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus, X } from "lucide-react";
 
 export interface GroupOption {
   id: string;
@@ -10,44 +10,89 @@ export interface GroupOption {
 }
 
 interface RecipientsCardProps {
-  recipientsText: string;
-  setRecipientsText: (val: string) => void;
+  recipients: string[];
+  setRecipients: React.Dispatch<React.SetStateAction<string[]>>;
   groups: GroupOption[];
   onSelectGroup: (groupId: string) => void;
 }
 
 export function RecipientsCard({
-  recipientsText,
-  setRecipientsText,
+  recipients,
+  setRecipients,
   groups,
   onSelectGroup,
 }: RecipientsCardProps) {
+  const handleEmailChange = (index: number, value: string) => {
+    const updated = [...recipients];
+    updated[index] = value;
+    setRecipients(updated);
+  };
+
+  const handleAddRecipient = () => {
+    if (recipients.length >= 30) return;
+    setRecipients([...recipients, ""]);
+  };
+
+  const handleRemoveRecipient = (index: number) => {
+    if (recipients.length === 1) {
+      setRecipients([""]);
+      return;
+    }
+    const updated = recipients.filter((_, i) => i !== index);
+    setRecipients(updated);
+  };
+
   return (
     <div className="bg-[#1C1C1E] border border-white/5 rounded-[24px] p-6 lg:col-span-1 flex flex-col justify-between">
       <div>
         <div className="mb-4">
           <span className="text-xs text-zinc-400 block">04</span>
           <h2 className="text-base sm:text-lg font-bold text-white">
-            Destinatarios
+            Destinatarios (Whitelist)
           </h2>
         </div>
 
         <div className="mb-4">
-          <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
-            Correos electrónicos
-          </label>
-          <input
-            type="text"
-            value={recipientsText}
-            onChange={(e) => setRecipientsText(e.target.value)}
-            placeholder="ejemplo@correo.com, otro@correo.com"
-            className="w-full bg-black/50 border border-white/5 rounded-full py-2.5 px-4 text-sm text-white placeholder-zinc-500 outline-none focus:border-white/20 transition-colors"
-          />
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs text-zinc-400 font-medium">
+              Correos autorizados ({recipients.filter((e) => e.trim()).length}/30)
+            </label>
+            <button
+              type="button"
+              onClick={handleAddRecipient}
+              className="text-xs font-bold text-[#CCFF00] hover:scale-105 transition-transform flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Agregar</span>
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+            {recipients.map((email, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => handleEmailChange(idx, e.target.value)}
+                  placeholder="ejemplo@correo.com"
+                  className="w-full bg-black/50 border border-white/5 rounded-full py-2 px-3.5 text-xs sm:text-sm text-white placeholder-zinc-500 outline-none focus:border-[#CCFF00]/50 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveRecipient(idx)}
+                  className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer shrink-0"
+                  title="Quitar destinatario"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div>
           <label className="text-xs text-zinc-400 block mb-1.5 font-medium">
-            Mis grupos
+            Añadir desde Mis grupos
           </label>
           <div className="relative">
             <select

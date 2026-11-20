@@ -75,7 +75,7 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`w-full py-3.5 rounded-full backdrop-blur-md flex items-center transition-all duration-200 cursor-pointer ${
+                  className={`w-full py-3.5 rounded-full backdrop-blur-md flex items-center transition-all duration-300 cursor-pointer ${
                     isCollapsed
                       ? "justify-center px-0"
                       : "justify-center px-6 gap-3"
@@ -98,7 +98,7 @@ export function Sidebar() {
           <button
             type="button"
             onClick={handleSignOut}
-            className={`w-full py-3.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-bold text-sm flex items-center transition-all duration-200 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 active:scale-[0.98] cursor-pointer ${
+            className={`w-full py-3.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-bold text-sm flex items-center transition-all duration-300 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 active:scale-[0.98] cursor-pointer ${
               isCollapsed
                 ? "justify-center px-0"
                 : "justify-center px-4 text-center"

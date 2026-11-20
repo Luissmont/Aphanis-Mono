@@ -9,6 +9,7 @@ interface CreateTransferData {
   contentType: string;
   encryptedBlob: string;
   userId: string;
+  recipients: string[];
 }
 
 interface TransferInfo {
@@ -63,6 +64,19 @@ export const TransfersRepository = {
     if (contentError) {
       throw new Error(contentError.message);
     }
+
+    const recipientsData = data.recipients.map((email) => ({
+      transfer_id: transfer.id,
+      email,
+    }));
+
+    const { error: recipientsError } = await supabaseServer
+      .from("transfer_recipients")
+      .insert(recipientsData);
+
+    if (recipientsError) {
+      throw new Error(recipientsError.message);
+    }
   },
 
   async getTransferByCode(accessCode: string): Promise<TransferInfo> {
@@ -95,6 +109,61 @@ export const TransfersRepository = {
     const { data, error } = await supabase
       .rpc("process_transfer_opening", {
         p_access_code: accessCode,
+      })
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const result = data as RpcResult;
+
+    if (!result || !result.is_valid || !result.encrypted_blob) {
+      throw new Error("Transferencia destruida o inválida");
+    }
+
+    return result.encrypted_blob;
+  },
+
+  async verifyAndUnlockTransfer(
+    accessCode: string,
+    email: string,
+    otpCode: string,
+    pinHash: string
+  ): Promise<string> {
+    const { data, error } = await supabase
+      .rpc("verify_and_unlock_transfer", {
+        p_access_code: accessCode,
+        p_email: email,
+        p_otp_code: otpCode,
+        p_pin_hash: pinHash,
+      })
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const result = data as RpcResult;
+
+    if (!result || !result.is_valid || !result.encrypted_blob) {
+      throw new Error("Transferencia destruida o inválida");
+    }
+
+    return result.encrypted_blob;
+  },
+
+  async unlockTransferAuthenticated(
+    accessCode: string,
+    userEmail: string,
+    pinHash: string
+  ): Promise<string> {
+    const supabaseServer = await createSupabaseServerClient();
+    const { data, error } = await supabaseServer
+      .rpc("unlock_transfer_authenticated", {
+        p_access_code: accessCode,
+        p_user_email: userEmail,
+        p_pin_hash: pinHash,
       })
       .single();
 

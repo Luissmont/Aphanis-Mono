@@ -70,29 +70,37 @@ export async function POST(request: Request) {
       );
     }
 
-    let sanitizedRecipients: string[] | undefined = undefined;
-    if (recipients !== undefined && recipients !== null) {
-      if (!Array.isArray(recipients) || recipients.length > 10) {
-        return NextResponse.json(
-          { error: "Máximo 10 destinatarios permitidos" },
-          { status: 400 }
-        );
-      }
-
-      const allValid = recipients.every(
-        (email: unknown) =>
-          typeof email === "string" && EMAIL_REGEX.test(email.trim())
+    if (
+      !Array.isArray(recipients) ||
+      recipients.length === 0 ||
+      recipients.length > 30
+    ) {
+      return NextResponse.json(
+        { error: "Debes incluir entre 1 y 30 destinatarios permitidos" },
+        { status: 400 }
       );
+    }
 
-      if (!allValid) {
-        return NextResponse.json(
-          { error: "Uno o más destinatarios no tienen un formato de correo válido" },
-          { status: 400 }
-        );
-      }
+    const allValid = recipients.every(
+      (email: unknown) =>
+        typeof email === "string" && EMAIL_REGEX.test(email.trim())
+    );
 
-      sanitizedRecipients = Array.from(
-        new Set(recipients.map((email: string) => email.trim().toLowerCase()))
+    if (!allValid) {
+      return NextResponse.json(
+        { error: "Uno o más destinatarios no tienen un formato de correo válido" },
+        { status: 400 }
+      );
+    }
+
+    const sanitizedRecipients = Array.from(
+      new Set(recipients.map((email: string) => email.trim().toLowerCase()))
+    );
+
+    if (sanitizedRecipients.length === 0) {
+      return NextResponse.json(
+        { error: "Debes incluir al menos un destinatario válido" },
+        { status: 400 }
       );
     }
 

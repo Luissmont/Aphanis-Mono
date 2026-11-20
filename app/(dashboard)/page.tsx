@@ -24,7 +24,7 @@ export default function Home() {
   const [expiresInHours, setExpiresInHours] = useState(24);
   const [maxOpens, setMaxOpens] = useState(3);
   const [pin, setPin] = useState("");
-  const [recipientsText, setRecipientsText] = useState("");
+  const [recipients, setRecipients] = useState<string[]>([""]);
   const [groups, setGroups] = useState<GroupOption[]>([]);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -59,13 +59,12 @@ export default function Home() {
     const newEmails = group.group_members.map((m) =>
       m.email.trim().toLowerCase()
     );
-    const existing = recipientsText
-      .split(",")
+    const existing = recipients
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
 
     const combined = Array.from(new Set([...existing, ...newEmails]));
-    setRecipientsText(combined.join(", "));
+    setRecipients(combined.length > 0 ? combined : [""]);
   };
 
   const handleCreateTransfer = async () => {
@@ -91,6 +90,19 @@ export default function Home() {
       return;
     }
 
+    const cleanRecipients = Array.from(
+      new Set(
+        recipients
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean)
+      )
+    );
+
+    if (cleanRecipients.length === 0) {
+      setError("Debes incluir al menos un destinatario autorizado para la transferencia.");
+      return;
+    }
+
     try {
       setIsProcessing(true);
 
@@ -113,15 +125,6 @@ export default function Home() {
       const encryptedBlob = await encryptData(payloadBytes, key);
       const pinHash = await hashPin(pin);
 
-      const recipients = Array.from(
-        new Set(
-          recipientsText
-            .split(",")
-            .map((e) => e.trim().toLowerCase())
-            .filter(Boolean)
-        )
-      );
-
       const response = await fetch("/api/transfers", {
         method: "POST",
         headers: {
@@ -133,7 +136,7 @@ export default function Home() {
           max_opens: maxOpens,
           expires_in_hours: expiresInHours,
           pin_hash: pinHash,
-          recipients: recipients.length > 0 ? recipients : undefined,
+          recipients: cleanRecipients,
         }),
       });
 
@@ -166,7 +169,7 @@ export default function Home() {
           Crear envío seguro
         </h1>
         <p className="text-zinc-400 mt-2 text-sm sm:text-base">
-          Cifra texto o archivos y controla quién puede acceder.
+          Cifra texto o archivos y controla quién puede acceder mediante lista blanca y OTP.
         </p>
       </header>
 
@@ -230,7 +233,7 @@ export default function Home() {
               setSecretText("");
               setSelectedFile(null);
               setPin("");
-              setRecipientsText("");
+              setRecipients([""]);
             }}
             className="mt-2 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold py-2.5 px-6 rounded-full self-start transition-colors cursor-pointer"
           >
@@ -260,8 +263,8 @@ export default function Home() {
               onGeneratePin={handleGeneratePin}
             />
             <RecipientsCard
-              recipientsText={recipientsText}
-              setRecipientsText={setRecipientsText}
+              recipients={recipients}
+              setRecipients={setRecipients}
               groups={groups}
               onSelectGroup={handleSelectGroup}
             />
