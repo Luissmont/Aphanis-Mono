@@ -29,6 +29,7 @@ interface TransferWithPinHash {
 interface RpcResult {
   is_valid: boolean;
   transfer_id: string;
+  updated_status?: string;
 }
 
 export const TransfersRepository = {
@@ -115,6 +116,12 @@ export const TransfersRepository = {
 
     if (contentError || !content) {
       throw new Error("Contenido no encontrado");
+    }
+
+    if (result.updated_status === "destroyed") {
+      await supabase.rpc("purge_transfer_content", {
+        p_transfer_id: result.transfer_id,
+      });
     }
 
     return content.encrypted_blob as string;
