@@ -269,6 +269,11 @@ function DecryptContent() {
           decryptedText={decryptedText}
           decryptedFile={decryptedFile}
           expiresAt={expiresAt}
+          onExpired={() => {
+            setDecryptedText(null);
+            setDecryptedFile(null);
+            setIsGone(true);
+          }}
         />
       </div>
     );

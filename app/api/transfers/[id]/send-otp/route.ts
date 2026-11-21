@@ -9,6 +9,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const startTime = Date.now();
   try {
     const rawId = (await params).id;
     const accessCode = (rawId || "").trim().toUpperCase();
@@ -92,6 +93,10 @@ export async function POST(
       }
       return NextResponse.json({ sent: true });
     }
+
+    await new Promise((r) =>
+      setTimeout(r, Math.max(0, 400 - (Date.now() - startTime)))
+    );
 
     return NextResponse.json({
       sent: true,

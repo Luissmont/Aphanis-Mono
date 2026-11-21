@@ -6,7 +6,7 @@ import {
   type DecryptedFile,
 } from "@/components/public/DecryptedContent";
 import { importKeyFromPin, decryptData, hashPin } from "@/lib/crypto";
-import { Lock, Loader2, ArrowLeft } from "lucide-react";
+import { Lock, Loader2, ArrowLeft, ShieldAlert } from "lucide-react";
 
 export default function RecibirPage() {
   const [accessCodeInput, setAccessCodeInput] = useState("");
@@ -17,6 +17,7 @@ export default function RecibirPage() {
   const [decryptedText, setDecryptedText] = useState<string | null>(null);
   const [decryptedFile, setDecryptedFile] = useState<DecryptedFile | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [isGone, setIsGone] = useState(false);
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +87,43 @@ export default function RecibirPage() {
     setAccessCodeInput("");
     setPin("");
     setError("");
+    setIsGone(false);
   };
+
+  const handleExpired = () => {
+    setDecryptedText(null);
+    setDecryptedFile(null);
+    setExpiresAt(null);
+    setIsGone(true);
+  };
+
+  if (isGone) {
+    return (
+      <div className="p-8 md:p-12 w-full max-w-7xl mx-auto flex flex-col items-center justify-center py-16">
+        <div className="w-full max-w-md bg-[#1C1C1E] border border-red-500/20 rounded-[28px] p-8 sm:p-10 text-center shadow-2xl flex flex-col items-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 mb-6">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <span className="text-xs font-bold uppercase tracking-widest text-red-400 mb-2 block">
+            ESTADO 410
+          </span>
+          <h1 className="font-sans text-3xl sm:text-4xl font-bold text-white tracking-wide">
+            410 GONE
+          </h1>
+          <p className="text-zinc-400 text-sm mt-3 leading-relaxed">
+            Este paquete ha expirado o ya fue destruido.
+          </p>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="mt-6 bg-white/10 hover:bg-white/15 text-white text-xs font-bold uppercase tracking-wider py-2.5 px-6 rounded-full transition-colors cursor-pointer"
+          >
+            Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (decryptedText || decryptedFile) {
     return (
@@ -105,6 +142,7 @@ export default function RecibirPage() {
           decryptedFile={decryptedFile}
           expiresAt={expiresAt}
           onReset={handleReset}
+          onExpired={handleExpired}
         />
       </div>
     );
@@ -146,7 +184,7 @@ export default function RecibirPage() {
                 required
                 value={accessCodeInput}
                 onChange={(e) => setAccessCodeInput(e.target.value)}
-                placeholder="Ej. A1B2C3D4 o https://.../A1B2C3D4"
+                placeholder="Ej. A1B2C3D4E5F6 o https://.../A1B2C3D4E5F6"
                 className="w-full bg-black/50 border border-white/5 rounded-full py-3.5 px-5 text-sm text-white placeholder-zinc-500 font-mono outline-none focus:border-[#CCFF00]/50 transition-colors"
               />
             </div>

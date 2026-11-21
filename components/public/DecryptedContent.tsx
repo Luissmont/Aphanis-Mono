@@ -15,6 +15,7 @@ interface DecryptedContentProps {
   decryptedFile?: DecryptedFile | null;
   expiresAt?: string | null;
   onReset?: () => void;
+  onExpired?: () => void;
 }
 
 export function DecryptedContent({
@@ -22,6 +23,7 @@ export function DecryptedContent({
   decryptedFile,
   expiresAt,
   onReset,
+  onExpired,
 }: DecryptedContentProps) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("");
@@ -36,6 +38,7 @@ export function DecryptedContent({
       const diff = new Date(expiresAt).getTime() - Date.now();
       if (diff <= 0) {
         setTimeLeft("00:00:00 — EXPIRADO");
+        onExpired?.();
         return;
       }
 
@@ -51,7 +54,7 @@ export function DecryptedContent({
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [expiresAt]);
+  }, [expiresAt, onExpired]);
 
   const handleCopyText = () => {
     if (!decryptedText) return;

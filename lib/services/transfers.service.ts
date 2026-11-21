@@ -35,20 +35,40 @@ export const TransfersService = {
   async processNewTransfer(
     params: ProcessNewTransferParams
   ): Promise<ProcessTransferResult> {
-    const accessCode = randomBytes(4).toString("hex").toUpperCase();
     const hours = params.expiresInHours ?? 24;
     const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
 
-    await TransfersRepository.createTransfer({
-      accessCode,
-      pinHash: params.pinHash,
-      maxOpens: params.maxOpens,
-      expiresAt,
-      contentType: params.contentType,
-      encryptedBlob: params.encryptedBlob,
-      userId: params.userId,
-      recipients: params.recipients || [],
-    });
+    let accessCode = "";
+    let inserted = false;
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (!inserted && attempts < maxAttempts) {
+      attempts++;
+      accessCode = randomBytes(6).toString("hex").toUpperCase();
+      try {
+        await TransfersRepository.createTransfer({
+          accessCode,
+          pinHash: params.pinHash,
+          maxOpens: params.maxOpens,
+          expiresAt,
+          contentType: params.contentType,
+          encryptedBlob: params.encryptedBlob,
+          userId: params.userId,
+          recipients: params.recipients || [],
+        });
+        inserted = true;
+      } catch (err) {
+        const msg = (err as Error).message || "";
+        if (
+          (/unique/i.test(msg) || /23505/i.test(msg) || /duplicate/i.test(msg)) &&
+          attempts < maxAttempts
+        ) {
+          continue;
+        }
+        throw err;
+      }
+    }
 
     let emailStatus: { sent: boolean; warning?: string } | undefined;
 
