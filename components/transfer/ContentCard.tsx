@@ -21,10 +21,10 @@ const validateFileSecurity = async (file: File): Promise<string | null> => {
 
   try {
     const bytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
-    const isWindowsExe = bytes[0] === 0x4d && bytes[1] === 0x5a; // 'MZ' (Windows Executable / DLL)
-    const isLinuxBin = bytes[0] === 0x7f && bytes[1] === 0x45 && bytes[2] === 0x4c && bytes[3] === 0x46; // '.ELF' (Linux Executable)
+    const isWindowsExe = bytes[0] === 0x4d && bytes[1] === 0x5a; // exec m<
+    const isLinuxBin = bytes[0] === 0x7f && bytes[1] === 0x45 && bytes[2] === 0x4c && bytes[3] === 0x46; // exec elf
     const isMachO = (bytes[0] === 0xfe && bytes[1] === 0xed && bytes[2] === 0xfa && bytes[3] === 0xce) ||
-                    (bytes[0] === 0xcf && bytes[1] === 0xfa && bytes[2] === 0xed && bytes[3] === 0xfe); // Mach-O (macOS Binary)
+      (bytes[0] === 0xcf && bytes[1] === 0xfa && bytes[2] === 0xed && bytes[3] === 0xfe); // exec mac
 
     if (isWindowsExe || isLinuxBin || isMachO) {
       return "Archivo no permitido: el contenido corresponde a un programa ejecutable camuflado.";
@@ -73,8 +73,8 @@ export function ContentCard({
             type="button"
             onClick={() => handleTabChange("text")}
             className={`py-1 px-3.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${contentType === "text"
-                ? "bg-white/10 text-white shadow-sm"
-                : "bg-transparent text-zinc-400 hover:text-white"
+              ? "bg-white/10 text-white shadow-sm"
+              : "bg-transparent text-zinc-400 hover:text-white"
               }`}
           >
             Texto plano
@@ -83,8 +83,8 @@ export function ContentCard({
             type="button"
             onClick={() => handleTabChange("file")}
             className={`py-1 px-3.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${contentType === "file"
-                ? "bg-white/10 text-white shadow-sm"
-                : "bg-transparent text-zinc-400 hover:text-white"
+              ? "bg-white/10 text-white shadow-sm"
+              : "bg-transparent text-zinc-400 hover:text-white"
               }`}
           >
             Archivo
