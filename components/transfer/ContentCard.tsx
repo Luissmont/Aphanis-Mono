@@ -12,6 +12,25 @@ interface ContentCardProps {
   setSelectedFile: (file: File | null) => void;
 }
 
+const DANGEROUS_EXTS = /\.(exe|bat|cmd|sh|vbs|scr|msi|ps1|jar|dll|com|pif)(\.|$)/i;
+
+const validateFileSecurity = async (file: File): Promise<string | null> => {
+  if (DANGEROUS_EXTS.test(file.name)) {
+    return "Archivo no permitido: se detectó una extensión ejecutable o doble extensión sospechosa.";
+  }
+
+  try {
+    const bytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+    if (bytes[0] === 0x4d && bytes[1] === 0x5a) {
+      return "Archivo no permitido: el contenido corresponde a un binario ejecutable camuflado.";
+    }
+  } catch {
+    // Si no se puede leer el buffer, continuar
+  }
+
+  return null;
+};
+
 export function ContentCard({
   contentType,
   setContentType,
@@ -83,12 +102,20 @@ export function ContentCard({
             <input
               type="file"
               ref={fileInputRef}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
 
                 if (file.size > 10 * 1024 * 1024) {
                   setFileError("El archivo excede el límite máximo permitido de 10 MB.");
+                  setSelectedFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                  return;
+                }
+
+                const securityError = await validateFileSecurity(file);
+                if (securityError) {
+                  setFileError(securityError);
                   setSelectedFile(null);
                   if (fileInputRef.current) fileInputRef.current.value = "";
                   return;
