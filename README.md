@@ -1,21 +1,13 @@
 <div align="center">
   <img src="logo.png" alt="APHANIS Logo" width="128" height="128" />
   <h1>APHANIS</h1>
-  <p><strong>(Sistema de Transferencia con Cifrado en el Cliente (Zero-Knowledge) y Autodestrucción)</strong></p>
+  <p><strong>(Sistema de Transferencia con Cifrado en el Cliente (Zero-Knowledge))</strong></p>
   <p>
     <strong>Next.js 16.4.6</strong> | <strong>React 19.3.0</strong> | <strong>TypeScript 5.x</strong> | <strong>AES-256-GCM</strong> | <strong>Licencia MIT</strong>
   </p>
   <p>
     <a href="https://aphanis-mono.vercel.app"><strong>Despliegue en Producción »</strong></a>
   </p>
-</div>
-
----
-
-## Vista Previa
-
-<div align="center">
-  <img src="preview.png" alt="APHANIS Preview" width="100%" />
 </div>
 
 ---
